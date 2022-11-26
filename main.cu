@@ -36,6 +36,7 @@ int main( int argc, char **argv )
 	// Version CPU
 	// Get input image
 	std::cout << "Loading image: " << fileName << std::endl;
+	//const Image inputImg 
 	//const PPMBitmap input( fileName );
 	//const int width		= input.getWidth();
 	//const int height	= input.getHeight();
