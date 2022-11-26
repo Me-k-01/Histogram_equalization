@@ -1,5 +1,5 @@
-#ifndef __HISTOGRAMME_CPU__
-#define __HISTOGRAMME_CPU__
+#ifndef __HISTOGRAMME_GPU__
+#define __HISTOGRAMME_GPU__
   
 // Fonction qui pour chaque pixel de l’image, calcule sa valeur dans l’espace HSV, et répartit le résultat dans trois tableaux différents
 void rgb2hsv();

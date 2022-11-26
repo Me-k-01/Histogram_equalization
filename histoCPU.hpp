@@ -1,6 +1,8 @@
 #ifndef __HISTOGRAMME_CPU__
 #define __HISTOGRAMME_CPU__
   
+// Version séquentiel de l'algorithme 
+
 // Fonction qui pour chaque pixel de l’image, calcule sa valeur dans l’espace HSV, et répartit le résultat dans trois tableaux différents
 void rgb2hsv();
 
@@ -16,4 +18,4 @@ void repart();
 // À partir de la répartition précédente, “étaler” l’histogramme.
 void equalization();
 
-#endif // __HISTOGRAMME_GPU__
+#endif // __HISTOGRAMME_CPU__
