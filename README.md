@@ -2,7 +2,11 @@
 Projet de TP GPGPU, Master 1
 
 
-compiler le programme:
+Compiler le programme:
+```sh
 nvcc -o hist main.cu histoCPU.cpp
-Le lancer:
-./hist
+```
+Lancer le programme:
+```sh
+./hist -f /path/to/image.jpg
+```

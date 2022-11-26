@@ -7,13 +7,13 @@ void rgb2hsv();
 // Transformation de HSV vers RGB (donc de trois tableaux vers un seul).
 void hsv2rgb();
 
-// Fonction qui à partir de la composante V de chaque pixel, calcule l’histogramme de l’image.
+// Kernel qui à partir de la composante V de chaque pixel, calcule l’histogramme de l’image.
 void histogram();
 
-// À partir de l’histogramme, applique la fonction de répartition r(l)
+// Kernel qui à partir de l’histogramme, applique la fonction de répartition r(l)
 void repart();
 
-// À partir de la répartition précédente, “étaler” l’histogramme.
+// Kernel qui à partir de la répartition précédente, “étaler” l’histogramme.
 void equalization();
 
 #endif // __HISTOGRAMME_GPU__
