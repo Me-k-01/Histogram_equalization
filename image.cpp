@@ -1,5 +1,9 @@
 #include "image.hpp"
-#include <exception>
+//#include <exception>
+#include <cstring>
+#include <stdexcept>
+
+
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
@@ -21,7 +25,7 @@ void Image::load( const std::string & p_path )
     if ( _pixels == nullptr )
     {
         std::string msg = "Failed to load image: " + p_path + "\n" + stbi_failure_reason();
-        throw std::exception( msg.c_str() );
+        throw std::runtime_error( msg.c_str() );
     }
 }
 
