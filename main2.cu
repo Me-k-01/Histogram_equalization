@@ -41,10 +41,21 @@ int main( int argc, char **argv )
 	std::cout << "Loading image: " << fileName << std::endl;
 	Image inputImage;
     inputImage.load(fileName);
-    
-    std::cout << "Image has " << inputImage._width << " x " << inputImage._height << " pixels and has " << inputImage._nbChannels << "channel of color" << std::endl;
+    std::cout << "Image has " << inputImage._width << " x " << inputImage._height << " pixels and has " << inputImage._nbChannels << " channel of color" << std::endl;
 
-    inputImage.save(outPutImgDir +"test.png");
+
+	// tests des fonctions CPU
+	Image outputImage;
+	std::vector<float> htable, stable, vtable;
+	std::vector<unsigned char> pixels;
+	rgb2hsv(inputImage, htable,stable,vtable);
+	hsv2rgb(htable,stable,vtable,pixels);
+	outputImage._height = inputImage._height;
+	outputImage._width = inputImage._width;
+	outputImage._nbChannels = inputImage._nbChannels;
+	outputImage._pixels = pixels.data();
+
+	outputImage.save(outPutImgDir + "testfonc.png");
 
 	return 0;
 }
