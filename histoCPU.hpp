@@ -1,10 +1,12 @@
 #ifndef __HISTOGRAMME_CPU__
 #define __HISTOGRAMME_CPU__
   
+#include "image.hpp"
+
 // Version séquentiel de l'algorithme 
 
 // Fonction qui pour chaque pixel de l’image, calcule sa valeur dans l’espace HSV, et répartit le résultat dans trois tableaux différents
-void rgb2hsv();
+void rgb2hsv(Image * img, unsigned char * hue, unsigned char * sat, unsigned char * val);
 
 // Transformation de HSV vers RGB (donc de trois tableaux vers un seul).
 void hsv2rgb();
