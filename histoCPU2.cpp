@@ -1,6 +1,7 @@
 #include "histoCPU2.hpp"
 
 #include <iostream>
+#include <algorithm>
 
 #define PI 3.14159265f
 
@@ -8,21 +9,21 @@
 
 //version found at https://www.rapidtables.com/convert/color/hsv-to-rgb.html
 /*
-void rgb2hsv(const Image & f_image, std::vector<float> & f_Htable,  std::vector<float> &  f_Stable,  std::vector<float> &  f_Vtable){
+void rgb2hsv(const Image & f_Image, std::vector<float> & f_HueTable,  std::vector<float> &  f_SaturationTable,  std::vector<float> &  f_ValueTable){
 
-    int imagesize = f_image._height*f_image._width*f_image._nbChannels;
+    int imagesize = f_Image._height*f_Image._width*f_Image._nbChannels;
     //on s'assure que les vecteur sont vides
-    f_Htable.clear();
-    f_Stable.clear();
-    f_Vtable.clear();
+    f_HueTable.clear();
+    f_SaturationTable.clear();
+    f_ValueTable.clear();
 
     for (int i = 0; i < imagesize; i+=3)
     {
         int tableindice = i /3;
 
-        float red = (float)f_image._pixels[i]/255.0f;
-        float green = (float)f_image._pixels[i+1]/255.0f;
-        float blue = (float)f_image._pixels[i+2]/255.0f;
+        float red = (float)f_Image._pixels[i]/255.0f;
+        float green = (float)f_Image._pixels[i+1]/255.0f;
+        float blue = (float)f_Image._pixels[i+2]/255.0f;
 
         float colormax = std::max(red,std::max(green,blue));
         float colormin = std::min(red,std::min(green,blue));
@@ -30,77 +31,77 @@ void rgb2hsv(const Image & f_image, std::vector<float> & f_Htable,  std::vector<
 
         if(colordelta > 0){
             if(colormax == red){
-                f_Htable.push_back(60 * ((green - blue)/colordelta));
+                f_HueTable.push_back(60 * ((green - blue)/colordelta));
             }
             else if (colormax == green)
             {
-                f_Htable.push_back(60 * (((blue - red)/colordelta) + 2.0f));
+                f_HueTable.push_back(60 * (((blue - red)/colordelta) + 2.0f));
             }
             else{
-                f_Htable.push_back(60 * (((red - green)/colordelta) + 4.0f));
+                f_HueTable.push_back(60 * (((red - green)/colordelta) + 4.0f));
             }
-            if(f_Htable.at(tableindice) < 0){
-                f_Htable.at(tableindice) += 360.0;
+            if(f_HueTable.at(tableindice) < 0){
+                f_HueTable.at(tableindice) += 360.0;
             }
         }
         else{
-            f_Htable.push_back(0);
+            f_HueTable.push_back(0);
         }
 
 
         if(colormax > 0){
-            f_Stable.push_back(colordelta / colormax);
+            f_SaturationTable.push_back(colordelta / colormax);
         }
         else{
-            f_Stable.push_back(0);
+            f_SaturationTable.push_back(0);
         }
 
-        f_Vtable.push_back(colormax);
+        f_ValueTable.push_back(colormax);
 
     }
 }
 */
 
 //version found at https://www.had2know.org/technology/hsv-rgb-conversion-formula-calculator.html#:~:text=Converting%20RGB%20to%20HSV&text=H%20%3D%20360%20%2D%20cos%2D1,cosine%20is%20calculated%20in%20degrees.
-void rgb2hsv(const Image & f_image, std::vector<float> & f_Htable,  std::vector<float> &  f_Stable,  std::vector<float> &  f_Vtable){
+void rgb2hsv(const Image & f_Image, std::vector<float> & f_HueTable,  std::vector<float> &  f_SaturationTable,  std::vector<float> &  f_ValueTable){
 
-    int imagesize = f_image._height*f_image._width*f_image._nbChannels;
+    int imagesize = f_Image._height*f_Image._width*f_Image._nbChannels;
     //on s'assure que les vecteur sont vides
-    f_Htable.clear();
-    f_Stable.clear();
-    f_Vtable.clear();
+    f_HueTable.clear();
+    f_SaturationTable.clear();
+    f_ValueTable.clear();
 
     for (int i = 0; i < imagesize; i+=3)
     {
-        float red = (float)f_image._pixels[i];
-        float green = (float)f_image._pixels[i+1];
-        float blue = (float)f_image._pixels[i+2];
+        float red = (float)f_Image._pixels[i];
+        float green = (float)f_Image._pixels[i+1];
+        float blue = (float)f_Image._pixels[i+2];
 
         float colormax = std::max(red, std::max(green, blue));
         float colormin = std::min(red, std::min(green, blue));
 
-        f_Vtable.emplace_back(colormax/255.0f);
+        f_ValueTable.emplace_back(colormax/255.0f);
         
         if(colormax > 0){
-            f_Stable.emplace_back(1.0f-(colormin/colormax));
+            f_SaturationTable.emplace_back(1.0f-(colormin/colormax));
         }
         else
         {
-            f_Stable.emplace_back(0.0f);
+            f_SaturationTable.emplace_back(0.0f);
         }
 
         if(colormax - colormin > 0){
 
             float hue = (std::acos((red - (green/2.0f + blue/2.0f))/std::sqrt(red*red + green*green + blue*blue - (red*green + red*blue + green*blue))))*180/PI;
             if( blue > green){
-                f_Htable.emplace_back(360.0f - hue);
+                f_HueTable.emplace_back(360.0f - hue);
             }
             else{
-                f_Htable.emplace_back(hue);
+                f_HueTable.emplace_back(hue);
             }
         }
         else{
-                f_Htable.emplace_back(0.0f);
+                f_HueTable.emplace_back(0.0f);
         }
     }
 }
@@ -111,17 +112,17 @@ void rgb2hsv(const Image & f_image, std::vector<float> & f_Htable,  std::vector<
 // Transformation de HSV vers RGB (donc de trois tableaux vers un seul).
 //version found at https://www.rapidtables.com/convert/color/hsv-to-rgb.html
 /*
-void hsv2rgb(const std::vector<float> & f_Htable, const std::vector<float> & f_Stable, const std::vector<float> & f_Vtable, std::vector<unsigned char> & f_pixeltable){
-    int tablesize = f_Htable.size(); 
-    f_pixeltable.clear();
+void hsv2rgb(const std::vector<float> & f_HueTable, const std::vector<float> & f_SaturationTable, const std::vector<float> & f_ValueTable, std::vector<unsigned char> & f_PixelTable){
+    int tablesize = f_HueTable.size(); 
+    f_PixelTable.clear();
 
     for (int i = 0; i < tablesize; i++)
     {
-        float h = f_Htable[i];
+        float h = f_HueTable[i];
 
-        float c = f_Vtable[i] * f_Stable[i];
+        float c = f_ValueTable[i] * f_SaturationTable[i];
         float x = c *(1.0f - std::abs((std::fmod((h/60.0f), 2.0f) -1.0f)));
-        float m = f_Vtable[i] - c;
+        float m = f_ValueTable[i] - c;
 
         float red=0.0f, green=0.0f, blue =0.0f;
         
@@ -156,57 +157,57 @@ void hsv2rgb(const std::vector<float> & f_Htable, const std::vector<float> & f_S
             blue = x;
         }
     
-        f_pixeltable.push_back((unsigned char)((red + m) * 255));
-        f_pixeltable.push_back((unsigned char)((green + m) * 255));
-        f_pixeltable.push_back((unsigned char)((blue + m) * 255));
+        f_PixelTable.push_back((unsigned char)((red + m) * 255));
+        f_PixelTable.push_back((unsigned char)((green + m) * 255));
+        f_PixelTable.push_back((unsigned char)((blue + m) * 255));
 
     }
 }
 */
 
 //version found at https://www.had2know.org/technology/hsv-rgb-conversion-formula-calculator.html#:~:text=Converting%20RGB%20to%20HSV&text=H%20%3D%20360%20%2D%20cos%2D1,cosine%20is%20calculated%20in%20degrees.
-void hsv2rgb(const std::vector<float> & f_Htable, const std::vector<float> & f_Stable, const std::vector<float> & f_Vtable, std::vector<unsigned char> & f_pixeltable){
-    int tablesize = f_Htable.size(); 
-    f_pixeltable.clear();
+void hsv2rgb(const std::vector<float> & f_HueTable, const std::vector<float> & f_SaturationTable, const std::vector<float> & f_ValueTable, std::vector<unsigned char> & f_PixelTable){
+    int tablesize = f_HueTable.size(); 
+    f_PixelTable.clear();
 
     for (int i = 0; i < tablesize; i++)
     {
-        float colormax = 255.0f * f_Vtable.at(i);
-        float colormin = colormax*(1.0f-f_Stable.at(i));
+        float colormax = 255.0f * f_ValueTable.at(i);
+        float colormin = colormax*(1.0f-f_SaturationTable.at(i));
 
-        float h = f_Htable.at(i);
+        float h = f_HueTable.at(i);
 
         float z = (colormax - colormin)* (1.0f - abs(fmod(h/60.0f,2.0f) -1.0f));
 
         if(h < 60){
-            f_pixeltable.emplace_back((unsigned char)std::round(colormax));
-            f_pixeltable.emplace_back((unsigned char)std::round(z + colormin));
-            f_pixeltable.emplace_back((unsigned char)std::round(colormin));
+            f_PixelTable.emplace_back((unsigned char)std::round(colormax));
+            f_PixelTable.emplace_back((unsigned char)std::round(z + colormin));
+            f_PixelTable.emplace_back((unsigned char)std::round(colormin));
         }
         else if (h < 120){
-            f_pixeltable.emplace_back((unsigned char)std::round(z + colormin));
-            f_pixeltable.emplace_back((unsigned char)std::round(colormax));
-            f_pixeltable.emplace_back((unsigned char)std::round(colormin));
+            f_PixelTable.emplace_back((unsigned char)std::round(z + colormin));
+            f_PixelTable.emplace_back((unsigned char)std::round(colormax));
+            f_PixelTable.emplace_back((unsigned char)std::round(colormin));
         }
         else if (h < 180){
-            f_pixeltable.emplace_back((unsigned char)std::round(colormin));
-            f_pixeltable.emplace_back((unsigned char)std::round(colormax));
-            f_pixeltable.emplace_back((unsigned char)std::round(z + colormin));
+            f_PixelTable.emplace_back((unsigned char)std::round(colormin));
+            f_PixelTable.emplace_back((unsigned char)std::round(colormax));
+            f_PixelTable.emplace_back((unsigned char)std::round(z + colormin));
         }
         else if (h < 240){
-            f_pixeltable.emplace_back((unsigned char)std::round(colormin));
-            f_pixeltable.emplace_back((unsigned char)std::round(z + colormin));
-            f_pixeltable.emplace_back((unsigned char)std::round(colormax));
+            f_PixelTable.emplace_back((unsigned char)std::round(colormin));
+            f_PixelTable.emplace_back((unsigned char)std::round(z + colormin));
+            f_PixelTable.emplace_back((unsigned char)std::round(colormax));
         }
         else if (h < 300){
-            f_pixeltable.emplace_back((unsigned char)(z + colormin));
-            f_pixeltable.emplace_back((unsigned char)std::round(colormin));
-            f_pixeltable.emplace_back((unsigned char)std::round(colormax));
+            f_PixelTable.emplace_back((unsigned char)(z + colormin));
+            f_PixelTable.emplace_back((unsigned char)std::round(colormin));
+            f_PixelTable.emplace_back((unsigned char)std::round(colormax));
         }
         else{
-            f_pixeltable.emplace_back((unsigned char)std::round(colormax));
-            f_pixeltable.emplace_back((unsigned char)std::round(colormin));
-            f_pixeltable.emplace_back((unsigned char)std::round(z + colormin));
+            f_PixelTable.emplace_back((unsigned char)std::round(colormax));
+            f_PixelTable.emplace_back((unsigned char)std::round(colormin));
+            f_PixelTable.emplace_back((unsigned char)std::round(z + colormin));
         }
         
 
@@ -215,11 +216,43 @@ void hsv2rgb(const std::vector<float> & f_Htable, const std::vector<float> & f_S
 
 
 // Fonction qui à partir de la composante V de chaque pixel, calcule l’histogramme de l’image.
-void histogram(){}
+void histogram(const std::vector<float> & f_ValueTable, const unsigned int f_NbEchantillon, std::vector<unsigned int> & f_HistoTable){
+    f_HistoTable.clear();
+    f_HistoTable.resize(f_NbEchantillon);
+    std::fill(f_HistoTable.begin(), f_HistoTable.end(), 0); //rempli l'entièreté du vecteur Histogramme avec des 0
+
+    for (unsigned int i = 0; i < f_ValueTable.size(); i++)
+    {
+        unsigned int indiceHisto = std::min((unsigned int)std::max((int)std::round(f_ValueTable.at(i)*(f_NbEchantillon-1)),0),f_NbEchantillon);
+        f_HistoTable.at(indiceHisto) ++;
+    }
+}
 
 // À partir de l’histogramme, applique la fonction de répartition r(l)
-void repart(){}
+void repart(const std::vector<unsigned int> & f_HistoTable, std::vector<unsigned int> & f_RepartionTable){
+    f_RepartionTable.clear();
+    f_RepartionTable.resize(f_HistoTable.size());
+
+    f_RepartionTable.at(0) = f_HistoTable.at(0);
+
+    for (size_t i = 1; i < f_HistoTable.size(); i++)
+    {
+        f_RepartionTable.at(i) = f_RepartionTable.at(i-1) + f_HistoTable.at(i);
+    }
+}
 
 // À partir de la répartition précédente, “étaler” l’histogramme.
-void equalization(){}
+void equalization(const std::vector<unsigned int> & f_RepartionTable,  std::vector<float> & f_ValueTable){
+    unsigned int imageSize = f_ValueTable.size();
+    unsigned int NbEchantillon = f_RepartionTable.size();
+
+    float coefficient = ((float)NbEchantillon - 1.f)/(((float)NbEchantillon)*imageSize);
+
+    for (size_t i = 0; i < imageSize; i++)
+    {
+        unsigned int indiceRepartitionTable = std::round(f_ValueTable[i]*(NbEchantillon-1));
+        f_ValueTable.at(i) = coefficient * (float)f_RepartionTable.at(indiceRepartitionTable); 
+    }
+    
+}
 

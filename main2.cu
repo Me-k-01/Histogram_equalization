@@ -48,14 +48,20 @@ int main( int argc, char **argv )
 	Image outputImage;
 	std::vector<float> htable, stable, vtable;
 	std::vector<unsigned char> pixels;
+	std::vector<unsigned int> histoTable, repartTable;
 	rgb2hsv(inputImage, htable,stable,vtable);
+
+	histogram(vtable, 256, histoTable);
+	repart(histoTable, repartTable);
+	equalization(repartTable, vtable);
+	
 	hsv2rgb(htable,stable,vtable,pixels);
 	outputImage._height = inputImage._height;
 	outputImage._width = inputImage._width;
 	outputImage._nbChannels = inputImage._nbChannels;
 	outputImage._pixels = pixels.data();
 
-	outputImage.save(outPutImgDir + "testfonc.png");
+	outputImage.save(outPutImgDir + "testallfonc.png");
 
 	return 0;
 }
