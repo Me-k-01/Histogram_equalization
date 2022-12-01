@@ -9,6 +9,7 @@ float min(const float a, const float b, const float c){
     return std::min(std::min(a, b), c);
 } 
 
+
 void rgb2hsv(const Image * const img, unsigned char * hue, unsigned char * sat, unsigned char * val) {
     for (int y = 0; y < img->_height; y++) {
         for (int x = 0; x < img->_width; x++) {
@@ -46,7 +47,7 @@ void hsv2rgb(unsigned char * hue, unsigned char * sat, unsigned char * val, cons
     for (int y = 0; y < img->_height; y++) {
         for (int x = 0; x < img->_width; x++) { 
             const size_t i = x + img->_width * y; 
-            const float h = hue[i]/255.f;
+            const float h = hue[i]/255.f * 6.f;
             const float s = sat[i]/255.f;
             const float v = val[i]/255.f;  
             const float hDecimal = (h - (int)h);
