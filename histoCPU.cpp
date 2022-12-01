@@ -12,17 +12,14 @@ float min(const float a, const float b, const float c){
 void rgb2hsv(const Image * const img, unsigned char * hue, unsigned char * sat, unsigned char * val) {
     for (int y = 0; y < img->_height; y++) {
         for (int x = 0; x < img->_width; x++) {
-            const size_t i = (x + img->_width * y) * img->_nbChannels;
-            const float r = img->_pixels[i]/255.f;
-            const float g = img->_pixels[i+1]/255.f;
-            const float b = img->_pixels[i+2]/255.f; 
+            const size_t i = x + img->_width * y;
+            const size_t j = i * img->_nbChannels;
+            const float r = img->_pixels[j]/255.f;
+            const float g = img->_pixels[j+1]/255.f;
+            const float b = img->_pixels[j+2]/255.f; 
             const float colMax = max(r, g, b);
             const float colMin = min(r, g, b);
             const float delta = colMax - colMin;
-
-            // arccos en degrés
-            //float hueCalc = acos((r - .5f * g - .5f * b) / sqrt(r*r + g*g + b*b - r*g - r*b - g*b)) * (180.f/M_PI);
-            //std::cout<<hueCalc<<std::endl;
 
             float hueCalc; 
             if (delta == 0)
@@ -51,17 +48,21 @@ void hsv2rgb(unsigned char * hue, unsigned char * sat, unsigned char * val, cons
             const size_t i = x + img->_width * y; 
             const float h = hue[i]/255.f;
             const float s = sat[i]/255.f;
-            const float v = val[i]/255.f; 
-            //std::cout << s;
+            const float v = val[i]/255.f;  
             const float hDecimal = (h - (int)h);
+            //std::cout << hDecimal << std::endl;
 
             const float alpha = v * (1-s);
             const float beta = v * (1-hDecimal) * s;
-            const float gamma = v * (1-(1-hDecimal)) * s;
+            const float gamma = v * (1-(1-hDecimal)) * s; 
 
  
             float r; float g; float b;
-            if (0 <= h && h < 1) {
+            if (h == 0){
+                r = v;
+                g = v;
+                b = v;
+            } else if (0 < h && h < 1) {
                 r = v;
                 g = gamma;
                 b = alpha;

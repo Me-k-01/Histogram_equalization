@@ -44,12 +44,11 @@ int main( int argc, char **argv )
 	int nbChannel = inputImg._nbChannels;
 
 	std::cout << "Image has " << width << " x " << height << " pixels" << std::endl;
-	std::cout << "and has " << nbChannel << " channels of color" << std::endl;
-	size_t size = width * height * nbChannel ;
+	std::cout << "and has " << nbChannel << " channels of color" << std::endl; 
 	
-	unsigned char hsv[3][size]; //= {{},{},{}};   
+	unsigned char hsv[3][width * height]; //= {{},{},{}};   
 	rgb2hsv(&inputImg, hsv[0], hsv[1], hsv[2]);
- 
+	//std::cout << hsv[0][0] - (int)hsv[0][0];
 	hsv2rgb(hsv[0], hsv[1], hsv[2], &inputImg);
 	std::cout << "Test rgb to hsv" << fileName << std::endl;
   
