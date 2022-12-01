@@ -21,7 +21,7 @@ int main( int argc, char **argv )
 	{
 		std::cerr << "Please give a file..." << std::endl;
 		printUsage();
-	}
+	} 
 
 	for ( int i = 1; i < argc; ++i ) 
 	{
@@ -37,17 +37,22 @@ int main( int argc, char **argv )
 	// Version CPU
 	// Get input image
 	std::cout << "Loading image: " << fileName << std::endl;
-	Image inputImg;
+	Image inputImg; 
 	inputImg.load(fileName);
-	std::cout << "Image has " << inputImg._width << " x " << inputImg._height << " pixels" << std::endl;
-	std::cout << "and has " << inputImg._nbChannels << " channels of color" << std::endl;
-	size_t size = inputImg._width * inputImg._height * 3 ;
-	unsigned char hsv[3][size] = {{},{},{}};   
-	rgb2hsv(&inputImg, hsv[0], hsv[1], hsv[2]);
-	//unsigned char hue[size]; 
-	//unsigned char sat[size];
-	//unsigned char val[size]; 
-	//rgb2hsv(&inputImg, hue, sat, val);
+	int width = inputImg._width;
+	int height = inputImg._height;
+	int nbChannel = inputImg._nbChannels;
 
+	std::cout << "Image has " << width << " x " << height << " pixels" << std::endl;
+	std::cout << "and has " << nbChannel << " channels of color" << std::endl;
+	size_t size = width * height * nbChannel ;
+	
+	unsigned char hsv[3][size]; //= {{},{},{}};   
+	rgb2hsv(&inputImg, hsv[0], hsv[1], hsv[2]);
+ 
+	hsv2rgb(hsv[0], hsv[1], hsv[2], &inputImg);
+	std::cout << "Test rgb to hsv" << fileName << std::endl;
+  
+	inputImg.save("./imgoutput/test.png"); 
 	return 0;
 }
