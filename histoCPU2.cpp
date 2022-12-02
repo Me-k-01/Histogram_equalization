@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 
 #define PI 3.14159265f
 
@@ -106,7 +107,46 @@ void rgb2hsv(const Image & f_Image, std::vector<float> & f_HueTable,  std::vecto
     }
 }
 
+//version avec des tableaux c pour une meilleur comparaison avec GPU
+void rgb2hsv(const Image & f_Image, float f_HueTable[],float f_SaturationTable[],float f_ValueTable[]){
+    
+    int imagesize = f_Image._height*f_Image._width;
 
+
+    for (int i = 0; i < imagesize; i++)
+    {
+        float red = (float)f_Image._pixels[i*3];
+        float green = (float)f_Image._pixels[i*3+1];
+        float blue = (float)f_Image._pixels[i*3+2];
+
+        float colormax = std::max(red, std::max(green, blue));
+        float colormin = std::min(red, std::min(green, blue));
+
+        f_ValueTable[i] = colormax/255.0f;
+        
+        if(colormax > 0){
+            f_SaturationTable[i] = 1.0f-(colormin/colormax);
+        }
+        else
+        {
+            f_SaturationTable[i] = 0.0f;
+        }
+
+        if(colormax - colormin > 0){
+
+            float hue = (std::acos((red - (green/2.0f + blue/2.0f))/std::sqrt(red*red + green*green + blue*blue - (red*green + red*blue + green*blue))))*180/PI;
+            if( blue > green){
+                f_HueTable[i] = 360.0f - hue;
+            }
+            else{
+                f_HueTable[i] = hue;
+            }
+        }
+        else{
+                f_HueTable[i] = 0.0f;
+        }
+    }
+}
 
 
 // Transformation de HSV vers RGB (donc de trois tableaux vers un seul).
@@ -214,6 +254,51 @@ void hsv2rgb(const std::vector<float> & f_HueTable, const std::vector<float> & f
     }
 }
 
+//version avec des tableaux c pour une meilleur comparaison avec GPU
+void hsv2rgb(const float f_HueTable[],const float f_SaturationTable[],const float f_ValueTable[], unsigned long sizeTable, unsigned char f_PixelTable[]){
+
+    for (int i = 0; i < sizeTable; i++)
+    {
+        float colormax = 255.0f * f_ValueTable[i];
+        float colormin = colormax*(1.0f-f_SaturationTable[i]);
+
+        float h = f_HueTable[i];
+
+        float z = (colormax - colormin)* (1.0f - abs(fmod(h/60.0f,2.0f) -1.0f));
+
+        if(h < 60){
+            f_PixelTable[i*3] = (unsigned char)std::round(colormax);
+            f_PixelTable[i*3+1] = ((unsigned char)std::round(z + colormin));
+            f_PixelTable[i*3+2] = ((unsigned char)std::round(colormin));
+        }
+        else if (h < 120){
+            f_PixelTable[i*3] = ((unsigned char)std::round(z + colormin));
+            f_PixelTable[i*3+1] = ((unsigned char)std::round(colormax));
+            f_PixelTable[i*3+2] = ((unsigned char)std::round(colormin));
+        }
+        else if (h < 180){
+            f_PixelTable[i*3] = ((unsigned char)std::round(colormin));
+            f_PixelTable[i*3+1] = ((unsigned char)std::round(colormax));
+            f_PixelTable[i*3+2] = ((unsigned char)std::round(z + colormin));
+        }
+        else if (h < 240){
+            f_PixelTable[i*3] = ((unsigned char)std::round(colormin));
+            f_PixelTable[i*3+1] = ((unsigned char)std::round(z + colormin));
+            f_PixelTable[i*3+2] = ((unsigned char)std::round(colormax));
+        }
+        else if (h < 300){
+            f_PixelTable[i*3] = ((unsigned char)(z + colormin));
+            f_PixelTable[i*3+1] = ((unsigned char)std::round(colormin));
+            f_PixelTable[i*3+2] = ((unsigned char)std::round(colormax));
+        }
+        else{
+            f_PixelTable[i*3] = ((unsigned char)std::round(colormax));
+            f_PixelTable[i*3+1] = ((unsigned char)std::round(colormin));
+            f_PixelTable[i*3+2] = ((unsigned char)std::round(z + colormin));
+        }
+    }
+}
+
 
 // Fonction qui à partir de la composante V de chaque pixel, calcule l’histogramme de l’image.
 void histogram(const std::vector<float> & f_ValueTable, const unsigned int f_NbEchantillon, std::vector<unsigned int> & f_HistoTable){
@@ -223,8 +308,21 @@ void histogram(const std::vector<float> & f_ValueTable, const unsigned int f_NbE
 
     for (unsigned int i = 0; i < f_ValueTable.size(); i++)
     {
-        unsigned int indiceHisto = std::min((unsigned int)std::max((int)std::round(f_ValueTable.at(i)*(f_NbEchantillon-1)),0),f_NbEchantillon);
+        unsigned int indiceHisto = (unsigned int)std::round(f_ValueTable.at(i)*(f_NbEchantillon-1));
         f_HistoTable.at(indiceHisto) ++;
+    }
+}
+
+//version avec des tableaux c pour une meilleur comparaison avec GPU
+void histogram(const float f_ValueTable[], unsigned long sizeTable, const unsigned int f_NbEchantillon, unsigned int f_HistoTable[]){
+    for (unsigned int i = 0; i < f_NbEchantillon; i++){
+        f_HistoTable[i] = 0;
+    }
+
+    for (unsigned int i = 0; i < sizeTable; i++)
+    {
+        unsigned int indiceHisto = std::min((unsigned int)std::max((int)std::round(f_ValueTable[i]*(f_NbEchantillon-1)),0),f_NbEchantillon-1);
+        f_HistoTable[indiceHisto] ++;
     }
 }
 
@@ -238,6 +336,16 @@ void repart(const std::vector<unsigned int> & f_HistoTable, std::vector<unsigned
     for (size_t i = 1; i < f_HistoTable.size(); i++)
     {
         f_RepartionTable.at(i) = f_RepartionTable.at(i-1) + f_HistoTable.at(i);
+    }
+}
+
+//version avec des tableaux c pour une meilleur comparaison avec GPU
+void repart(const unsigned int f_HistoTable[], unsigned long sizeTable, unsigned int f_RepartionTable[]){
+    f_RepartionTable[0] = f_HistoTable[0];
+
+    for (size_t i = 1; i < sizeTable; i++)
+    {
+        f_RepartionTable[i] = f_RepartionTable[i-1] + f_HistoTable[i];
     }
 }
 
@@ -256,3 +364,15 @@ void equalization(const std::vector<unsigned int> & f_RepartionTable,  std::vect
     
 }
 
+//version avec des tableaux c pour une meilleur comparaison avec GPU
+void equalization(const unsigned int f_RepartionTable[], unsigned long sizeTableRepartition, float f_ValueTable[], unsigned long sizeValueTable){
+    float coefficient = ((float)sizeTableRepartition - 1.f)/(((float)sizeTableRepartition)*sizeValueTable);
+
+    sizeTableRepartition -= 1 ; //évitera la redondance dans la boucle
+    
+    for (size_t i = 0; i < sizeValueTable; i++)
+    {
+        unsigned int indiceRepartitionTable = std::round(f_ValueTable[i]*(sizeTableRepartition));
+        f_ValueTable[i] = coefficient * (float)f_RepartionTable[indiceRepartitionTable]; 
+    }
+}

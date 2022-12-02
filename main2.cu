@@ -1,5 +1,6 @@
 #include <iostream> 
 #include <string>
+#include <cstring>
  
 #include "histoCPU2.hpp" 
 #include "image.hpp"
@@ -45,6 +46,7 @@ int main( int argc, char **argv )
 
 
 	// tests des fonctions CPU
+	/*
 	Image outputImage;
 	std::vector<float> htable, stable, vtable;
 	std::vector<unsigned char> pixels;
@@ -60,8 +62,21 @@ int main( int argc, char **argv )
 	outputImage._width = inputImage._width;
 	outputImage._nbChannels = inputImage._nbChannels;
 	outputImage._pixels = pixels.data();
+*/
 
-	outputImage.save(outPutImgDir + "testallfonc.png");
+	const int imagesize = inputImage._height* inputImage._width;
+
+	float * hueTable = new float[imagesize],* saturationTable = new float[imagesize],* valueTable = new float[imagesize];
+	int nbEchantillon = 256;
+	unsigned int * histoTable = new unsigned int[nbEchantillon], * repartTable = new unsigned int[nbEchantillon];
+
+	rgb2hsv(inputImage, hueTable, saturationTable, valueTable);
+	histogram(valueTable, imagesize, nbEchantillon, histoTable);
+	repart(histoTable, nbEchantillon, repartTable);
+	equalization(repartTable, nbEchantillon, valueTable, imagesize);
+	hsv2rgb(hueTable,saturationTable,valueTable, imagesize,inputImage._pixels);
+
+	inputImage.save(outPutImgDir + "testallfonc.png");
 
 	return 0;
 }
