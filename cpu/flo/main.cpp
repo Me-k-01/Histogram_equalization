@@ -1,7 +1,7 @@
 #include <iostream> 
 #include <cstring>
 #include "histoCPU.hpp" 
-#include "image.hpp" 
+#include "../../image.hpp" 
  
  void printUsage() 
 {
@@ -48,7 +48,7 @@ int main( int argc, char **argv )
 	rgb2hsv(&inputImg, hsv[0], hsv[1], hsv[2]);
   
 	//hsv2rgb(hsv[0], hsv[1], hsv[2], &inputImg);
-	//inputImg.save("./imgoutput/test_convertion.png"); 
+	//inputImg.save("./img_out/test_convertion.png"); 
 	
 	std::cout << "Test création histogramme" << std::endl;
 	unsigned int histArray[256];   
@@ -57,7 +57,7 @@ int main( int argc, char **argv )
 	std::cout << "Test égalisation d'histogramme" << std::endl;
 	equalization(hsv[2], imgSize, histArray);
 	hsv2rgb(hsv[0], hsv[1], hsv[2], &inputImg);
-	inputImg.save("./imgoutput/test_egalisation.png"); 
+	inputImg.save("./img_out/test_egalisation.png"); 
 
 
 	return 0;

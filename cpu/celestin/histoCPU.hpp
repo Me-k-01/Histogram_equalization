@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "image.hpp"
+#include "../../image.hpp"
 
 // Version séquentiel de l'algorithme 
 

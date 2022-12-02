@@ -1,4 +1,5 @@
 #include "histoCPU.hpp"
+
 #include <iostream>
 #include <cmath>
 

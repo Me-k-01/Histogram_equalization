@@ -1,10 +1,10 @@
 #include <iostream> 
 #include <string>
  
-#include "histoCPU2.hpp" 
-#include "image.hpp"
+#include "histoCPU.hpp" 
+#include "../../image.hpp"
  
-std::string outPutImgDir = ".\\imgoutput\\";
+std::string outPutImgDir = ".\\img_out\\";
 
 void printUsage() 
 {
@@ -61,7 +61,7 @@ int main( int argc, char **argv )
 	outputImage._nbChannels = inputImage._nbChannels;
 	outputImage._pixels = pixels.data();
 
-	outputImage.save(outPutImgDir + "testallfonc.png");
+	outputImage.save(outPutImgDir + "test_all_fonc.png");
 
 	return 0;
 }
