@@ -42,7 +42,14 @@ void toRGB(unsigned char * hsv, unsigned char * rgbOut) {
     const float s = hsv[1]/255.f;
     const float v = hsv[2]/255.f;  
 
+    /*
     const float colorMax = 255 * v;
+    const float colorMin = colorMax * (1 - s);
+    const float colorAdd = (colorMax-colorMin) * (1 - std::abs(
+        (((int)(h / 60.f)) % 2) - 1 
+    ));
+    */
+    const float colorMax = 255 * v; // Chroma
     const float colorMin = colorMax * (1 - s);
     const float colorAdd = (colorMax-colorMin) * (1 - std::abs(
         (((int)(h / 60.f)) % 2) - 1 
@@ -58,6 +65,7 @@ void toRGB(unsigned char * hsv, unsigned char * rgbOut) {
         g = colorMax;
         b = colorMin;
     } else if (120 <= h && h < 180) {
+        std::cout << "here: " << colorAdd << std::endl;
         r = colorMin;
         g = colorMax;
         b = colorAdd + colorMin;
@@ -200,5 +208,19 @@ int main() {
     std::cout << "G: " << (int)rgb[1] << std::endl;
     std::cout << "B: " << (int)rgb[2] << std::endl;
 
+    // test gris foncé
+    rgb[0] = (unsigned char) 31;
+    rgb[1] = (unsigned char) 170;
+    rgb[2] = (unsigned char) 97;
+    toHSV(rgb, hsv);
+    std::cout << std::endl << "Pour: " << (int)rgb[0] << " , " << (int)rgb[1] << " , " << (int)rgb[2] << std::endl;
+    std::cout << "H: " << (int)hsv[0] << std::endl;
+    std::cout << "S: " << (int)hsv[1] << std::endl;
+    std::cout << "V: " << (int)hsv[2] << std::endl;
+    toRGB(hsv, rgb);
+    std::cout  << std::endl;
+    std::cout << "R: " << (int)rgb[0] << std::endl;
+    std::cout << "G: " << (int)rgb[1] << std::endl;
+    std::cout << "B: " << (int)rgb[2] << std::endl;
     return 0;
 }
