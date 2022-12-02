@@ -91,8 +91,29 @@ void hsv2rgb(unsigned char * hue, unsigned char * sat, unsigned char * val, cons
     } 
 } 
 
-void histogram(unsigned char * imgVal, size_t imgSize, unsigned int * histArray) {
+void histogram(unsigned char * imgVal, size_t imgSize, unsigned int * histArray) { 
+    for (int i = 0; i < 256 ; i ++) {
+        histArray[i] = 0;
+    }
     for (size_t i = 0; i < imgSize; i++) {  
         histArray[imgVal[i]] ++;
+    }
+}
+
+// Somme des nombres d’occurrence des valeurs précédentes :
+int repart(unsigned int * histArray, size_t l) { 
+    int res = 0;
+    for (size_t k = 0; k <= l; k++) {  
+        res += histArray[k]; // TODO: optimisation, en gardant le resultat du dernier r(l) pour calculer le prochain
+    }
+    return res;
+}
+
+// Application de la transformation sur la composante intensité de l'image
+void equalization(unsigned char * imgVal, size_t imgSize, unsigned int * histArray) {
+    float L = 256.f; 
+
+    for (size_t x = 0; x < imgSize; x++) {
+        imgVal[x] = (L - 1.f) * 255.f / (L * imgSize) * (float)repart(histArray, imgVal[x]);
     }
 }

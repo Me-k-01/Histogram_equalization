@@ -44,15 +44,21 @@ int main( int argc, char **argv )
 	std::cout << "and has " << nbChannel << " channels of color" << std::endl; 
 	
 	std::cout << "Test rgb to hsv et hsv to rgb" << fileName << std::endl;
-	unsigned char hsv[3][imgSize];   
+	unsigned char hsv[3][imgSize]; 
 	rgb2hsv(&inputImg, hsv[0], hsv[1], hsv[2]);
-	hsv2rgb(hsv[0], hsv[1], hsv[2], &inputImg);
-	inputImg.save("./imgoutput/test_convertion.png"); 
-
-	unsigned int histArray[255];   
+  
+	//hsv2rgb(hsv[0], hsv[1], hsv[2], &inputImg);
+	//inputImg.save("./imgoutput/test_convertion.png"); 
+	
+	std::cout << "Test création histogramme" << std::endl;
+	unsigned int histArray[256];   
 	histogram(hsv[2], imgSize, histArray);
 
-	
+	std::cout << "Test égalisation d'histogramme" << std::endl;
+	equalization(hsv[2], imgSize, histArray);
+	hsv2rgb(hsv[0], hsv[1], hsv[2], &inputImg);
+	inputImg.save("./imgoutput/test_egalisation.png"); 
+
 
 	return 0;
 }

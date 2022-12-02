@@ -14,10 +14,10 @@ void hsv2rgb(unsigned char * hue, unsigned char * sat, unsigned char * val, cons
 // Fonction qui à partir de la composante V de chaque pixel, calcule l’histogramme de l’image.
 void histogram(unsigned char * imgVal, size_t imgSize, unsigned int * histArray);
 
-// À partir de l’histogramme, applique la fonction de répartition r(l)
-void repart(const Image * const img, unsigned int * histArray);
+// À partir de l’histogramme, applique la fonction de répartition r(l) 
+int repart(unsigned int * histArray, size_t l);
 
 // À partir de la répartition précédente, “étaler” l’histogramme.
-void equalization();
+void equalization(unsigned char * imgVal, size_t imgSize, unsigned int * histArray);
 
 #endif // __HISTOGRAMME_CPU__
