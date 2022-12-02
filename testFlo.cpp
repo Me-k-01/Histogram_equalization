@@ -30,9 +30,10 @@ void toHSV(unsigned char * rgb, unsigned char * hsvOut) {
     // Le Hue correspond à une roue de couleur [0, 6] 
     hueCalc = hueCalc >= 0? std::fmod(hueCalc, 6): std::fmod(hueCalc, 6) + 6;
  
-    hsvOut[0] = (hueCalc * 255.f) / 6.f;  
-    hsvOut[2] = colorMax * 255.f;
-    hsvOut[1] = colorMax == 0? 0 : (1.f - colorMin/colorMax) * 255.f; 
+    hsvOut[0] = (hueCalc * 255.f) / 6.f;  // hue
+    hsvOut[2] = colorMax * 255.f; // Val
+    hsvOut[1] = colorMax == 0? 0 : (1.f - colorMin/colorMax) * 255.f;  // Sat
+    //hsvOut[1] = hsvOut[2] == 0 ? 0 : (delta/hsvOut[2]) * 255.f;;
     //sat[i] = val[i] == 0? 0 : (delta/val[i]) * 255.f;
     //std::cout<< val[i] <<std::endl;
  
@@ -41,46 +42,38 @@ void toRGB(unsigned char * hsv, unsigned char * rgbOut) {
     const float h = hsv[0] * 360.f / 255.f;
     const float s = hsv[1]/255.f;
     const float v = hsv[2]/255.f;  
-
-    /*
-    const float colorMax = 255 * v;
-    const float colorMin = colorMax * (1 - s);
-    const float colorAdd = (colorMax-colorMin) * (1 - std::abs(
-        (((int)(h / 60.f)) % 2) - 1 
-    ));
-    */
+ 
     const float colorMax = 255 * v; // Chroma
     const float colorMin = colorMax * (1 - s);
     const float colorAdd = (colorMax-colorMin) * (1 - std::abs(
-        (((int)(h / 60.f)) % 2) - 1 
+        fmod((h / 60.f), 2) - 1 
     ));
-    
+    const float colorInter = colorAdd + colorMin;
     float r; float g; float b;
     if (0 <= h && h < 60) {
         r = colorMax;
-        g = colorAdd + colorMin;
+        g = colorInter;
         b = colorMin;
     } else if (60 <= h && h < 120) {
-        r = colorAdd + colorMin;
+        r = colorInter;
         g = colorMax;
         b = colorMin;
     } else if (120 <= h && h < 180) {
-        std::cout << "here: " << colorAdd << std::endl;
         r = colorMin;
         g = colorMax;
-        b = colorAdd + colorMin;
+        b = colorInter;
     } else if (180 <= h && h < 240) {
         r = colorMin;
-        g = colorAdd + colorMin;
+        g = colorInter;
         b = colorMax;
     } else if (240 <= h && h < 300) {
-        r = colorAdd + colorMin;
+        r = colorInter;
         g = colorMin;
         b = colorMax;
     } else if (300 <= h && h < 360) {
         r = colorMax;
         g = colorMin;
-        b = colorAdd + colorMin;
+        b = colorInter;
     }
 
     rgbOut[0] = r;
@@ -208,10 +201,40 @@ int main() {
     std::cout << "G: " << (int)rgb[1] << std::endl;
     std::cout << "B: " << (int)rgb[2] << std::endl;
 
+    // test gris clair
+    rgb[0] = (unsigned char) 200;
+    rgb[1] = (unsigned char) 200;
+    rgb[2] = (unsigned char) 200;
+    toHSV(rgb, hsv);
+    std::cout << std::endl << "Pour: " << (int)rgb[0] << " , " << (int)rgb[1] << " , " << (int)rgb[2] << std::endl;
+    std::cout << "H: " << (int)hsv[0] << std::endl;
+    std::cout << "S: " << (int)hsv[1] << std::endl;
+    std::cout << "V: " << (int)hsv[2] << std::endl;
+    toRGB(hsv, rgb);
+    std::cout  << std::endl;
+    std::cout << "R: " << (int)rgb[0] << std::endl;
+    std::cout << "G: " << (int)rgb[1] << std::endl;
+    std::cout << "B: " << (int)rgb[2] << std::endl;
+
     // test gris foncé
     rgb[0] = (unsigned char) 31;
     rgb[1] = (unsigned char) 170;
     rgb[2] = (unsigned char) 97;
+    toHSV(rgb, hsv);
+    std::cout << std::endl << "Pour: " << (int)rgb[0] << " , " << (int)rgb[1] << " , " << (int)rgb[2] << std::endl;
+    std::cout << "H: " << (int)hsv[0] << std::endl;
+    std::cout << "S: " << (int)hsv[1] << std::endl;
+    std::cout << "V: " << (int)hsv[2] << std::endl;
+    toRGB(hsv, rgb);
+    std::cout  << std::endl;
+    std::cout << "R: " << (int)rgb[0] << std::endl;
+    std::cout << "G: " << (int)rgb[1] << std::endl;
+    std::cout << "B: " << (int)rgb[2] << std::endl;
+
+    // test blanc
+    rgb[0] = (unsigned char) 255;
+    rgb[1] = (unsigned char) 255;
+    rgb[2] = (unsigned char) 255;
     toHSV(rgb, hsv);
     std::cout << std::endl << "Pour: " << (int)rgb[0] << " , " << (int)rgb[1] << " , " << (int)rgb[2] << std::endl;
     std::cout << "H: " << (int)hsv[0] << std::endl;
