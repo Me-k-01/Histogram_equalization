@@ -35,19 +35,24 @@ int main( int argc, char **argv )
 	std::cout << "Loading image: " << fileName << std::endl;
 	Image inputImg; 
 	inputImg.load(fileName);
-	int width = inputImg._width;
-	int height = inputImg._height;
+	size_t width = inputImg._width;
+	size_t height = inputImg._height;
 	int nbChannel = inputImg._nbChannels;
+	size_t imgSize = width * height;
 
 	std::cout << "Image has " << width << " x " << height << " pixels" << std::endl;
 	std::cout << "and has " << nbChannel << " channels of color" << std::endl; 
 	
-	unsigned char hsv[3][width * height];   
+	std::cout << "Test rgb to hsv et hsv to rgb" << fileName << std::endl;
+	unsigned char hsv[3][imgSize];   
 	rgb2hsv(&inputImg, hsv[0], hsv[1], hsv[2]);
 	hsv2rgb(hsv[0], hsv[1], hsv[2], &inputImg);
-	std::cout << "Test rgb to hsv" << fileName << std::endl;
-  
-	inputImg.save("./imgoutput/test.png"); 
+	inputImg.save("./imgoutput/test_convertion.png"); 
+
+	unsigned int histArray[255];   
+	histogram(hsv[2], imgSize, histArray);
+
+	
 
 	return 0;
 }

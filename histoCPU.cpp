@@ -29,9 +29,10 @@ void rgb2hsv(const Image * const img, unsigned char * hue, unsigned char * sat, 
                 hueCalc = (b - r) / delta + 2;
             else //if (colMax == b)
                 hueCalc = (r - g) / delta + 4;
-            // Le Hue correspond à une roue de couleur [0, 6] 
-            hueCalc = hueCalc >= 0? std::fmod(hueCalc, 6): std::fmod(hueCalc, 6) + 6;
-            //sat[i] = val[i] == 0 ? 0 : (delta/val[i]) * 255.f;
+
+            // Le Hue correspond à une roue de couleur [0, 6]  
+            hueCalc = std::fmod(hueCalc, 6) + (hueCalc >= 0? 0 : 6);
+
             hue[i] = (hueCalc * 255.f) / 6.f;  
             val[i] = colorMax * 255.f;
             sat[i] = colorMax == 0? 0 : (1.f - colorMin/colorMax) * 255.f; 
@@ -43,13 +44,13 @@ void hsv2rgb(unsigned char * hue, unsigned char * sat, unsigned char * val, cons
     for (int x = 0; x < img->_width; x++) {  
         for (int y = 0; y < img->_height; y++) { 
             const size_t i = x + img->_width * y; 
-            const size_t j = i*img->_nbChannels;
+            const size_t j = i * img->_nbChannels;
             const float h = hue[i] * 360.f / 255.f;
             const float s = sat[i]/255.f;
             const float v = val[i]/255.f;  
 
  
-            const float colorMax = 255 * v; // Chroma
+            const float colorMax = 255 * v; 
             const float colorMin = colorMax * (1 - s);
             const float colorAdd = (colorMax-colorMin) * (1 - std::abs(
                 fmod((h / 60.f), 2) - 1 
@@ -89,3 +90,9 @@ void hsv2rgb(unsigned char * hue, unsigned char * sat, unsigned char * val, cons
         }
     } 
 } 
+
+void histogram(unsigned char * imgVal, size_t imgSize, unsigned int * histArray) {
+    for (size_t i = 0; i < imgSize; i++) {  
+        histArray[imgVal[i]] ++;
+    }
+}
