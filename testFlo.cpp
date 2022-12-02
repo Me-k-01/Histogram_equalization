@@ -216,20 +216,6 @@ int main() {
     std::cout << "G: " << (int)rgb[1] << std::endl;
     std::cout << "B: " << (int)rgb[2] << std::endl;
 
-    // test gris foncé
-    rgb[0] = (unsigned char) 31;
-    rgb[1] = (unsigned char) 170;
-    rgb[2] = (unsigned char) 97;
-    toHSV(rgb, hsv);
-    std::cout << std::endl << "Pour: " << (int)rgb[0] << " , " << (int)rgb[1] << " , " << (int)rgb[2] << std::endl;
-    std::cout << "H: " << (int)hsv[0] << std::endl;
-    std::cout << "S: " << (int)hsv[1] << std::endl;
-    std::cout << "V: " << (int)hsv[2] << std::endl;
-    toRGB(hsv, rgb);
-    std::cout  << std::endl;
-    std::cout << "R: " << (int)rgb[0] << std::endl;
-    std::cout << "G: " << (int)rgb[1] << std::endl;
-    std::cout << "B: " << (int)rgb[2] << std::endl;
 
     // test blanc
     rgb[0] = (unsigned char) 255;
@@ -245,5 +231,52 @@ int main() {
     std::cout << "R: " << (int)rgb[0] << std::endl;
     std::cout << "G: " << (int)rgb[1] << std::endl;
     std::cout << "B: " << (int)rgb[2] << std::endl;
+
+    // test couleur veratre
+    rgb[0] = (unsigned char) 31;
+    rgb[1] = (unsigned char) 170;
+    rgb[2] = (unsigned char) 97;
+    toHSV(rgb, hsv);
+    std::cout << std::endl << "Pour: " << (int)rgb[0] << " , " << (int)rgb[1] << " , " << (int)rgb[2] << std::endl;
+    std::cout << "H: " << (int)hsv[0] << std::endl;
+    std::cout << "S: " << (int)hsv[1] << std::endl;
+    std::cout << "V: " << (int)hsv[2] << std::endl;
+    toRGB(hsv, rgb);
+    std::cout  << std::endl;
+    std::cout << "R: " << (int)rgb[0] << std::endl;
+    std::cout << "G: " << (int)rgb[1] << std::endl;
+    std::cout << "B: " << (int)rgb[2] << std::endl;
+
+    // test couleur rougeatre
+    rgb[0] = (unsigned char) 170;
+    rgb[1] = (unsigned char) 97;
+    rgb[2] = (unsigned char) 34;
+    toHSV(rgb, hsv);
+    std::cout << std::endl << "Pour: " << (int)rgb[0] << " , " << (int)rgb[1] << " , " << (int)rgb[2] << std::endl;
+    std::cout << "H: " << (int)hsv[0] << std::endl;
+    std::cout << "S: " << (int)hsv[1] << std::endl;
+    std::cout << "V: " << (int)hsv[2] << std::endl;
+    toRGB(hsv, rgb);
+    std::cout  << std::endl;
+    std::cout << "R: " << (int)rgb[0] << std::endl;
+    std::cout << "G: " << (int)rgb[1] << std::endl;
+    std::cout << "B: " << (int)rgb[2] << std::endl;
+
+    // test couleur bleuatre
+    rgb[0] = (unsigned char) 34;
+    rgb[1] = (unsigned char) 97;
+    rgb[2] = (unsigned char) 170;
+    toHSV(rgb, hsv);
+    std::cout << std::endl << "Pour: " << (int)rgb[0] << " , " << (int)rgb[1] << " , " << (int)rgb[2] << std::endl;
+    std::cout << "H: " << (int)hsv[0] << std::endl;
+    std::cout << "S: " << (int)hsv[1] << std::endl;
+    std::cout << "V: " << (int)hsv[2] << std::endl;
+    toRGB(hsv, rgb);
+    std::cout  << std::endl;
+    std::cout << "R: " << (int)rgb[0] << std::endl;
+    std::cout << "G: " << (int)rgb[1] << std::endl;
+    std::cout << "B: " << (int)rgb[2] << std::endl;
+
+
     return 0;
 }

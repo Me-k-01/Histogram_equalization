@@ -32,9 +32,9 @@ void rgb2hsv(const Image * const img, unsigned char * hue, unsigned char * sat, 
             // Le Hue correspond à une roue de couleur [0, 6] 
             hueCalc = hueCalc >= 0? std::fmod(hueCalc, 6): std::fmod(hueCalc, 6) + 6;
             //sat[i] = val[i] == 0 ? 0 : (delta/val[i]) * 255.f;
-            hue[i] = (unsigned char)(hueCalc * 255.f) / 6.f;  
-            val[i] = (unsigned char)colorMax * 255.f;
-            sat[i] = colorMax == 0? 0 : (unsigned char)(1.f - colorMin/colorMax) * 255.f; 
+            hue[i] = (hueCalc * 255.f) / 6.f;  
+            val[i] = colorMax * 255.f;
+            sat[i] = colorMax == 0? 0 : (1.f - colorMin/colorMax) * 255.f; 
         }
     }
 } 
@@ -46,7 +46,7 @@ void hsv2rgb(unsigned char * hue, unsigned char * sat, unsigned char * val, cons
             const size_t j = i*img->_nbChannels;
             const float h = hue[i] * 360.f / 255.f;
             const float s = sat[i]/255.f;
-            const float v = sat[i]/255.f;  
+            const float v = val[i]/255.f;  
 
  
             const float colorMax = 255 * v; // Chroma
@@ -83,9 +83,9 @@ void hsv2rgb(unsigned char * hue, unsigned char * sat, unsigned char * val, cons
                 b = colorInter;
             }
  
-            img->_pixels[j] = (unsigned char)r;
-            img->_pixels[j+1] = (unsigned char)g;
-            img->_pixels[j+2] = (unsigned char)b; 
+            img->_pixels[j] = r;
+            img->_pixels[j+1] = g;
+            img->_pixels[j+2] = b; 
         }
     } 
 } 

@@ -1,12 +1,12 @@
 #include <iostream> 
-#include <string>
+#include <cstring>
  
 #include "histoCPU.hpp" 
 #include "image.hpp" 
  
  void printUsage() 
 {
-	std::cerr	<< "Usage: " << std::endl
+	std::cerr << "Usage: " << std::endl
 			<< " \t -f <F>: <F> image file name" 			
 		    << std::endl << std::endl;
 	exit( EXIT_FAILURE );
@@ -17,17 +17,14 @@ int main( int argc, char **argv )
 	char fileName[2048];
 
 	// Parse program arguments
-	if ( argc == 1 ) 
-	{
+	if ( argc == 1 )  {
 		std::cerr << "Please give a file..." << std::endl;
 		printUsage();
 	} 
 
-	for ( int i = 1; i < argc; ++i ) 
-	{
-		if ( !strcmp( argv[i], "-f" ) ) 
-		{
-			if ( sscanf( argv[++i], "%s", &fileName ) != 1 )
+	for ( int i = 1; i < argc; ++i ) {
+		if ( !strcmp( argv[i], "-f" ) )  {
+			if ( sscanf( argv[++i], "%s", fileName ) != 1 )
 				printUsage();
 		}
 		else
