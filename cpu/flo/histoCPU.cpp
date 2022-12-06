@@ -113,6 +113,6 @@ int repart(unsigned int * histArray, size_t l) {
 // Application de la transformation sur la composante intensité de l'image
 void equalization(unsigned char * imgVal, size_t imgSize, unsigned int * histArray) { 
     for (size_t x = 0; x < imgSize; x++) {
-        imgVal[x] = 255.f / imgSize * repart(histArray, imgVal[x]); // On a multiplier par 255 pour avoir une valeur entre 0 et 255
+        imgVal[x] = (255.f*255.f) / (imgSize * 256.f) * repart(histArray, imgVal[x]); // On a multiplier par 255 pour avoir une valeur entre 0 et 255
     }
 }

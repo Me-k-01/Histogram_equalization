@@ -30,7 +30,7 @@ int main( int argc, char **argv )
 	{
 		if ( !strcmp( argv[i], "-f" ) ) 
 		{
-			if ( sscanf( argv[++i], "%s", &fileName ) != 1 )
+			if ( sscanf( argv[++i], "%s", fileName ) != 1 )
 				printUsage();
 		}
 		else
