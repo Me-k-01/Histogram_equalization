@@ -287,7 +287,7 @@ void hsv2rgb(const float f_HueTable[],const float f_SaturationTable[],const floa
             f_PixelTable[i*3+2] = ((unsigned char)std::round(colormax));
         }
         else if (h < 300){
-            f_PixelTable[i*3] = ((unsigned char)(z + colormin));
+            f_PixelTable[i*3] = ((unsigned char)std::round(z + colormin));
             f_PixelTable[i*3+1] = ((unsigned char)std::round(colormin));
             f_PixelTable[i*3+2] = ((unsigned char)std::round(colormax));
         }
