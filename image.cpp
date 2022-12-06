@@ -14,7 +14,7 @@ Image::Image( const int p_width, const int p_height, const int p_nbChannels )
     : _width( p_width ), _height( p_height ), _nbChannels( p_nbChannels )
 {
     _pixels = new unsigned char[ _width * _height * _nbChannels ];
-    std::memset( _pixels, 0, sizeof(_pixels) );
+    std::memset( _pixels, 0, sizeof(*_pixels) );
 }
 
 Image::~Image() { delete[] _pixels; }

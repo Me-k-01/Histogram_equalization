@@ -2,3 +2,4 @@ hist
 *.exp
 *.lib
 *.exe
+imgoutput/*

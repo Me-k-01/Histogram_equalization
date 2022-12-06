@@ -1,4 +1,4 @@
-#include "histoCPU2.hpp"
+#include "histoCPU.hpp"
 
 #include <iostream>
 #include <algorithm>

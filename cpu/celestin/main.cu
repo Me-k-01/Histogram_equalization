@@ -2,10 +2,10 @@
 #include <string>
 #include <cstring>
  
-#include "histoCPU2.hpp" 
-#include "image.hpp"
+#include "histoCPU.hpp" 
+#include "../../image.hpp"
  
-std::string outPutImgDir = ".\\imgoutput\\";
+std::string outPutImgDir = ".\\img_out\\";
 
 void printUsage() 
 {
@@ -76,7 +76,7 @@ int main( int argc, char **argv )
 	equalization(repartTable, nbEchantillon, valueTable, imagesize);
 	hsv2rgb(hueTable,saturationTable,valueTable, imagesize,inputImage._pixels);
 
-	inputImage.save(outPutImgDir + "testallfonc.png");
+	inputImage.save(outPutImgDir + "test_all_fonc.png");
 
 	return 0;
 }
