@@ -17,20 +17,20 @@ void gpuCall(const Image & f_ImageIn, int nbEchantillon, Image & f_ImageOut){
 
     HANDLE_ERROR(cudaMalloc((void**)&pixelTableIn, sizeImage*f_ImageIn._nbChannels*sizeof(unsigned char)));
     HANDLE_ERROR(cudaMalloc((void**)&pixelTableOut, sizeImage*f_ImageIn._nbChannels*sizeof(unsigned char)));
-    HANDLE_ERROR(cudaMalloc((void**)&hueTable, sizeImage*sizeof(unsigned char)));
-    HANDLE_ERROR(cudaMalloc((void**)&saturationTable, sizeImage*sizeof(unsigned char)));
-    HANDLE_ERROR(cudaMalloc((void**)&valueTable, sizeImage*sizeof(unsigned char)));
+    HANDLE_ERROR(cudaMalloc((void**)&hueTable, sizeImage*sizeof(float)));
+    HANDLE_ERROR(cudaMalloc((void**)&saturationTable, sizeImage*sizeof(float)));
+    HANDLE_ERROR(cudaMalloc((void**)&valueTable, sizeImage*sizeof(float)));
 
-    HANDLE_ERROR(cudaMemcpy(pixelTableIn, f_ImageIn._pixels, sizeImage*f_ImageIn._nbChannels*sizeof(unsigned char),cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(pixelTableOut, f_ImageIn._pixels, sizeImage*f_ImageIn._nbChannels*sizeof(unsigned char),cudaMemcpyHostToDevice));
 
-    rgb2hsv<<<bloc,grille>>>(pixelTableIn,sizeImage,hueTable,saturationTable,valueTable);
-    hsv2rgb<<<bloc,grille>>>(hueTable,saturationTable,valueTable, sizeImage, pixelTableOut);
+    rgb2hsv<<<grille,bloc>>>(pixelTableIn,sizeImage,hueTable,saturationTable,valueTable);
+    hsv2rgb<<<grille,bloc>>>(hueTable,saturationTable,valueTable, sizeImage, pixelTableOut);
 
     //définition de l'image de sortie
     f_ImageOut._width = f_ImageIn._width;
     f_ImageOut._height = f_ImageIn._height;
     f_ImageOut._nbChannels = f_ImageIn._nbChannels;
-
+    f_ImageOut._pixels = (unsigned char*)malloc(sizeImage*f_ImageIn._nbChannels*sizeof(unsigned char)) ;
     HANDLE_ERROR(cudaMemcpy(f_ImageOut._pixels, pixelTableOut, sizeImage*f_ImageIn._nbChannels*sizeof(unsigned char),cudaMemcpyDeviceToHost));
 
 
@@ -39,7 +39,6 @@ void gpuCall(const Image & f_ImageIn, int nbEchantillon, Image & f_ImageOut){
     HANDLE_ERROR(cudaFree(hueTable));
     HANDLE_ERROR(cudaFree(saturationTable));
     HANDLE_ERROR(cudaFree(valueTable));
-
 
 }
 
