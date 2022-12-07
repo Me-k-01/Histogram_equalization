@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "../../image.hpp"
+#include "../image.hpp"
 
 // fonction d'appel au fonction gpu
 void gpuCall(const Image & f_ImageIn, int nbEchantillon, Image & f_ImageOut);

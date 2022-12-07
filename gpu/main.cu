@@ -3,7 +3,7 @@
 #include <cstring>
  
 #include "histoGPU.hpp" 
-#include "../../image.hpp"
+#include "../image.hpp"
  
 std::string outPutImgDir = ".\\img_out\\";
 
