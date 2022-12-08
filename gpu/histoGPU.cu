@@ -166,7 +166,7 @@ __global__ void rgb2hsv(const unsigned char f_PixelTable[], unsigned int f_sizeT
 }
 
 // Transformation de HSV vers RGB (donc de trois tableaux vers un seul).
-__global__ void hsv2rgb(const float f_HueTable[],const float f_SaturationTable[],const float f_ValueTable[], unsigned int f_sizeTable, unsigned char f_PixelTable[]){
+__global__ void hsv2rgb(const float f_HueTable[],const float f_SaturationTable[], const float f_ValueTable[], unsigned int f_sizeTable, unsigned char f_PixelTable[]){
 
     int tidx = threadIdx.x + blockIdx.x*blockDim.x;
     int tidy = threadIdx.y + blockIdx.y*blockDim.y;
@@ -229,7 +229,7 @@ __global__ void histogram(const float f_ValueTable[], unsigned int sizeTable, co
 }
 
 // À partir de l’histogramme, applique la fonction de répartition r(l)
-__global__ void repart(const unsigned int f_HistoTable[], unsigned int sizeTable, unsigned int f_RepartionTable[]) {
+__global__ void repart(const unsigned int f_HistoTable[], const unsigned int sizeTable, unsigned int f_RepartionTable[]) {
     //__shared__ repartitionTable [sizeTable]; 
 
     int tidx = blockIdx.x * blockDim.x + threadIdx.x ; // tidx
@@ -250,7 +250,7 @@ __global__ void repart(const unsigned int f_HistoTable[], unsigned int sizeTable
 }
 
 // À partir de la répartition précédente, “étaler” l’histogramme.
-__global__ void equalization(const unsigned int f_RepartionTable[], unsigned int sizeTableRepartition, float f_ValueTable[], unsigned int sizeValueTable) {
+__global__ void equalization(const unsigned int f_RepartionTable[], unsigned int sizeTableRepartition, float f_ValueTable[], const unsigned int sizeValueTable) {
     int tidx = blockIdx.x * blockDim.x + threadIdx.x ; // tidx
     // sizeTableRepartition = L
     // sizeValueTable = n

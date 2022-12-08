@@ -1,11 +1,11 @@
 #include <iostream> 
 #include <string>
-#include <cstring>
- 
+#include <cstring> 
+
 #include "histoGPU.hpp" 
 #include "../image.hpp"
  
-std::string outPutImgDir = ".\\img_out\\";
+std::string outPutImgDir = "./img_out/"; 
 
 void printUsage() 
 {
@@ -44,9 +44,11 @@ int main( int argc, char **argv )
     inputImage.load(fileName);
     std::cout << "Image has " << inputImage._width << " x " << inputImage._height << " pixels and has " << inputImage._nbChannels << " channel of color" << std::endl;
 
-	// tests des fonctions GPU
-	gpuCallTest(inputImage,256);
-	//inputImage.save(outPutImgDir + "test_fonc_gpu_celestin.png");
+	// tests des fonctions GPU 
+	gpuCallTest(inputImage, 256);
+	
+	std::cout << "Saving image: " << outPutImgDir + "img_repart.png" << std::endl;
+	inputImage.save(outPutImgDir + "img_repart.png" );
 
 	return 0;
 }

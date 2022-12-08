@@ -22,9 +22,9 @@ __global__ void hsv2rgb(const float f_HueTable[],const float f_SaturationTable[]
 __global__ void histogram(const float f_ValueTable[], unsigned int sizeTable, const unsigned int f_NbEchantillon, unsigned int f_HistoTable[]);
 
 // À partir de l’histogramme, applique la fonction de répartition r(l)
-__global__ void repart(const unsigned int f_HistoTable[], unsigned int sizeTable, unsigned int f_RepartionTable[]);
+__global__ void repart(const unsigned int f_HistoTable[], const unsigned int sizeTable, unsigned int f_RepartionTable[]);
 
 // À partir de la répartition précédente, “étaler” l’histogramme.
-__global__ void equalization(const unsigned int f_RepartionTable[], unsigned int sizeTableRepartition, float f_ValueTable[], unsigned int sizeValueTable);
+__global__ void equalization(const unsigned int f_RepartionTable[], unsigned int sizeTableRepartition, float f_ValueTable[], const unsigned int sizeValueTable);
 
 #endif // __HISTOGRAMME_GPU__
