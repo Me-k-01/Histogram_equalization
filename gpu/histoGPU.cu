@@ -121,42 +121,34 @@ void gpuCallTest(Image & f_Image, int nbEchantillon){
 }
 
 // Fonction qui pour chaque pixel de l’image, calcule sa valeur dans l’espace HSV, et répartit le résultat dans trois tableaux différents
-__global__ void rgb2hsv(const unsigned char f_PixelTable[], unsigned int f_sizeTable, float f_HueTable[],float f_SaturationTable[],float f_ValueTable[]){
-    int tidx = threadIdx.x + blockIdx.x * blockDim.x;
-    int tidy = threadIdx.y + blockIdx.y * blockDim.y;
+__global__ void rgb2hsv(const unsigned char f_PixelTable[], const unsigned int f_sizeTable, float f_HueTable[], float f_SaturationTable[], float f_ValueTable[]){
+    const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+    const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
+    const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
     int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
-    int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
 
     while (tidGlobal < f_sizeTable)
     {
-        float red   = (float)f_PixelTable[tidGlobal*3];
-        float green = (float)f_PixelTable[tidGlobal*3 + 1];
-        float blue  = (float)f_PixelTable[tidGlobal*3 + 2];
+        const float red   = (float)f_PixelTable[tidGlobal*3];
+        const float green = (float)f_PixelTable[tidGlobal*3 + 1];
+        const float blue  = (float)f_PixelTable[tidGlobal*3 + 2];
 
-        float colormax = fmaxf(red, fmaxf(green, blue));
-        float colormin = fminf(red, fminf(green, blue));
+        const float colorMax = fmaxf(red, fmaxf(green, blue));
+        const float colorMin = fminf(red, fminf(green, blue));
 
-        f_ValueTable[tidGlobal] = colormax / 255.f;
+        f_ValueTable[tidGlobal]      = colorMax / 255.f;
+        f_SaturationTable[tidGlobal] = colorMax > 0 ? 1.f - colorMin/colorMax : 0.f;
         
-        if (colormax > 0) {
-            f_SaturationTable[tidGlobal] = 1.f - colormin/colormax;
-        } else {
-            f_SaturationTable[tidGlobal] = 0.f;
-        }
-
-        if (colormax - colormin > 0) {
+        if (colorMax - colorMin > 0) {
             float hue = acosf( 
                 (red - (green / 2.f + blue/2.f)) / sqrtf(red*red + green*green + blue*blue - (red*green + red*blue + green*blue))
             ) * 180.f / PI;
-            
-            if (blue > green) {
-                f_HueTable[tidGlobal] = 360.f - hue;
-            } else {
-                f_HueTable[tidGlobal] = hue;
-            }
+
+            f_HueTable[tidGlobal] = blue > green ? 360.f - hue : hue;
         } else {
             f_HueTable[tidGlobal] = 0.f;
         }
+
         tidGlobal += nbThreadTotal;
     }
     
@@ -171,37 +163,36 @@ __global__ void hsv2rgb(const float f_HueTable[], const float f_SaturationTable[
     int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
 
     while (tidGlobal < f_sizeTable) {
-        const int pixelIndex = tidGlobal * 3; 
-
         const float cMax = 255.f * f_ValueTable[tidGlobal];
         const float cMin = cMax  * (1.f - f_SaturationTable[tidGlobal]);
-        const float h    = f_HueTable[tidGlobal];
+        const float hue  = f_HueTable[tidGlobal];
         const float cAdd = (cMax - cMin) * (1.f - fabsf(fmodf(h / 60.f, 2.f) - 1.f));
         const unsigned char colorMax   = roundf(cMax);
         const unsigned char colorMin   = roundf(cMin);
         const unsigned char colorInter = roundf(cAdd + cMin);
 
-        if (h < 60) {
+        const int pixelIndex = tidGlobal * 3; 
+        if (hue < 60) {
             f_PixelTable[pixelIndex]     = colorMax;
             f_PixelTable[pixelIndex + 1] = colorInter;
             f_PixelTable[pixelIndex + 2] = colorMin;
-        } else if (h < 120) {
+        } else if (hue < 120) {
             f_PixelTable[pixelIndex]     = colorInter;
             f_PixelTable[pixelIndex + 1] = colorMax;
             f_PixelTable[pixelIndex + 2] = colorMin;
-        } else if (h < 180) {
+        } else if (hue < 180) {
             f_PixelTable[pixelIndex]     = colorMin;
             f_PixelTable[pixelIndex + 1] = colorMax;
             f_PixelTable[pixelIndex + 2] = colorInter;
-        } else if (h < 240) {
+        } else if (hue < 240) {
             f_PixelTable[pixelIndex]     = colorMin;
             f_PixelTable[pixelIndex + 1] = colorInter;
             f_PixelTable[pixelIndex + 2] = colorMax;
-        } else if (h < 300) {
+        } else if (hue < 300) {
             f_PixelTable[pixelIndex]     = colorInter;
             f_PixelTable[pixelIndex + 1] = colorMin;
             f_PixelTable[pixelIndex + 2] = colorMax;
-        } else { // si (h < 360)
+        } else { // si (hue < 360)
             f_PixelTable[pixelIndex]     = colorMax;
             f_PixelTable[pixelIndex + 1] = colorMin;
             f_PixelTable[pixelIndex + 2] = colorInter;

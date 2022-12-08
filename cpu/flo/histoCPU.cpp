@@ -85,7 +85,7 @@ void hsv2rgb(unsigned char * hue, unsigned char * sat, unsigned char * val, cons
                 b = colorInter;
             }
  
-            img->_pixels[j] = r;
+            img->_pixels[j]   = r;
             img->_pixels[j+1] = g;
             img->_pixels[j+2] = b; 
         }
