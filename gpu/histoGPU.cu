@@ -6,12 +6,12 @@
 #define PI 3.14159265f
 
 // fonction d'appel au fonction gpu
-void gpuCall(const Image & f_ImageIn, int nbEchantillon, Image & f_ImageOut){
+void gpuCall(Image & f_Image, int nbEchantillon){
 
     // Tailles 
-    unsigned long sizeImage = f_ImageIn._width * f_ImageIn._height;
-    unsigned long sizeTableInBytes = sizeImage * sizeof(float);
-    unsigned long sizeImageInBytes = sizeImage * sizeof(unsigned char) * f_ImageIn._nbChannels; 
+    unsigned int sizeImage = f_Image._width * f_Image._height;
+    unsigned int sizeTableInBytes = sizeImage * sizeof(float);
+    unsigned int sizeImageInBytes = sizeImage * sizeof(unsigned char) * f_Image._nbChannels; 
     // Création des pointeurs pour gpu
     float *hueTable, *saturationTable, *valueTable;
     unsigned char * pixelTableIn, *pixelTableOut;
@@ -25,11 +25,11 @@ void gpuCall(const Image & f_ImageIn, int nbEchantillon, Image & f_ImageOut){
     HANDLE_ERROR(cudaMalloc((void**)&histoTable, nbEchantillon*sizeof(unsigned int)));
     HANDLE_ERROR(cudaMalloc((void**)&repartTable, nbEchantillon*sizeof(unsigned int)));
 
-    HANDLE_ERROR(cudaMemcpy(pixelTableIn, f_ImageIn._pixels, sizeImageInBytes, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(pixelTableIn, f_Image._pixels, sizeImageInBytes, cudaMemcpyHostToDevice));
 
     //définition des bloc et grille selon les différents Kernel
     dim3 blocRGB2HSV(32,32,1);
-    dim3 grilleRGB2HSV((f_ImageIn._width + blocRGB2HSV.x-1)/blocRGB2HSV.x,(f_ImageIn._height + blocRGB2HSV.y-1)/blocRGB2HSV.y,1);
+    dim3 grilleRGB2HSV((f_Image._width + blocRGB2HSV.x-1)/blocRGB2HSV.x,(f_Image._height + blocRGB2HSV.y-1)/blocRGB2HSV.y,1);
     
     dim3 blocHistogramme(32,1,1);
     dim3 grilleHistogramme(1,1,1);
@@ -41,7 +41,7 @@ void gpuCall(const Image & f_ImageIn, int nbEchantillon, Image & f_ImageOut){
     dim3 grilleEqualization(1,1,1);
     
     dim3 blocHSV2RGB(32,32,1);
-    dim3 grilleHSV2RGB((f_ImageIn._width + blocHSV2RGB.x-1)/blocHSV2RGB.x,(f_ImageIn._height + blocHSV2RGB.y-1)/blocHSV2RGB.y,1);
+    dim3 grilleHSV2RGB((f_Image._width + blocHSV2RGB.x-1)/blocHSV2RGB.x,(f_Image._height + blocHSV2RGB.y-1)/blocHSV2RGB.y,1);
 
 
     rgb2hsv<<<blocRGB2HSV, grilleRGB2HSV>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
@@ -51,12 +51,66 @@ void gpuCall(const Image & f_ImageIn, int nbEchantillon, Image & f_ImageOut){
 
     hsv2rgb<<<blocHSV2RGB,grilleHSV2RGB>>>(hueTable,saturationTable,valueTable, sizeImage, pixelTableOut);
 
-    //définition de l'image de sortie
-    f_ImageOut._width = f_ImageIn._width;
-    f_ImageOut._height = f_ImageIn._height;
-    f_ImageOut._nbChannels = f_ImageIn._nbChannels;
-    f_ImageOut._pixels = (unsigned char*)malloc(sizeImageInBytes) ;
-    HANDLE_ERROR(cudaMemcpy(f_ImageOut._pixels, pixelTableOut, sizeImageInBytes,cudaMemcpyDeviceToHost));
+    HANDLE_ERROR(cudaMemcpy(f_Image._pixels, pixelTableOut, sizeImageInBytes,cudaMemcpyDeviceToHost));
+
+    HANDLE_ERROR(cudaFree(pixelTableIn));
+    HANDLE_ERROR(cudaFree(pixelTableOut));
+    HANDLE_ERROR(cudaFree(hueTable));
+    HANDLE_ERROR(cudaFree(saturationTable));
+    HANDLE_ERROR(cudaFree(valueTable));
+    HANDLE_ERROR(cudaFree(histoTable));
+    HANDLE_ERROR(cudaFree(repartTable));
+}
+
+// fonction d'appel au fonction gpu pour tests
+void gpuCallTest(Image & f_Image, int nbEchantillon){
+
+    // Tailles 
+    unsigned int sizeImage = f_Image._width * f_Image._height;
+    unsigned int sizeTableInBytes = sizeImage * sizeof(float);
+    unsigned int sizeImageInBytes = sizeImage * sizeof(unsigned char) * f_Image._nbChannels; 
+    // Création des pointeurs pour gpu
+    float *hueTable, *saturationTable, *valueTable;
+    unsigned char * pixelTableIn, *pixelTableOut;
+    unsigned int * histoTable, *repartTable;
+    
+
+    HANDLE_ERROR(cudaMalloc((void**)&pixelTableIn, sizeImageInBytes));
+    HANDLE_ERROR(cudaMalloc((void**)&pixelTableOut, sizeImageInBytes));
+    HANDLE_ERROR(cudaMalloc((void**)&hueTable, sizeTableInBytes));
+    HANDLE_ERROR(cudaMalloc((void**)&saturationTable, sizeTableInBytes));
+    HANDLE_ERROR(cudaMalloc((void**)&valueTable, sizeTableInBytes));
+    HANDLE_ERROR(cudaMalloc((void**)&histoTable, nbEchantillon*sizeof(unsigned int)));
+    HANDLE_ERROR(cudaMalloc((void**)&repartTable, nbEchantillon*sizeof(unsigned int)));
+
+    HANDLE_ERROR(cudaMemcpy(pixelTableIn, f_Image._pixels, sizeImageInBytes, cudaMemcpyHostToDevice));
+
+
+    //définition des bloc et grille selon les différents Kernel
+    dim3 blocRGB2HSV(32,32,1);
+    dim3 grilleRGB2HSV((f_Image._width + blocRGB2HSV.x-1)/blocRGB2HSV.x,(f_Image._height + blocRGB2HSV.y-1)/blocRGB2HSV.y,1);
+    rgb2hsv<<<blocRGB2HSV, grilleRGB2HSV>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
+
+        dim3 blocHistogramme(32,1,1);
+        dim3 grilleHistogramme(1,1,1);
+        histogram<<<blocHistogramme, grilleHistogramme>>>(valueTable, sizeImage, nbEchantillon, histoTable);
+
+
+        dim3 blocRepart(32,1,1);
+        dim3 grilleRepart(1,1,1);
+        repart<<<blocRepart, grilleRepart>>>(histoTable, nbEchantillon, repartTable);
+
+    for (int i = 1; i < 1025; i++)
+    {
+        
+    dim3 blocEqualization(i,1,1);
+    dim3 grilleEqualization(1,1,1);
+        
+    equalization<<<blocEqualization,grilleEqualization>>>(repartTable, nbEchantillon, valueTable, sizeImage);
+    }
+    
+    
+    //HANDLE_ERROR(cudaMemcpy(f_Image._pixels, pixelTableOut, sizeImageInBytes,cudaMemcpyDeviceToHost));
 
     HANDLE_ERROR(cudaFree(pixelTableIn));
     HANDLE_ERROR(cudaFree(pixelTableOut));
@@ -68,7 +122,7 @@ void gpuCall(const Image & f_ImageIn, int nbEchantillon, Image & f_ImageOut){
 }
 
 // Fonction qui pour chaque pixel de l’image, calcule sa valeur dans l’espace HSV, et répartit le résultat dans trois tableaux différents
-__global__ void rgb2hsv(const unsigned char f_PixelTable[], unsigned long f_sizeTable, float f_HueTable[],float f_SaturationTable[],float f_ValueTable[]){
+__global__ void rgb2hsv(const unsigned char f_PixelTable[], unsigned int f_sizeTable, float f_HueTable[],float f_SaturationTable[],float f_ValueTable[]){
     int tidx = threadIdx.x + blockIdx.x*blockDim.x;
     int tidy = threadIdx.y + blockIdx.y*blockDim.y;
     int tidglobal = tidx + tidy *blockDim.x*gridDim.x;
@@ -112,7 +166,7 @@ __global__ void rgb2hsv(const unsigned char f_PixelTable[], unsigned long f_size
 }
 
 // Transformation de HSV vers RGB (donc de trois tableaux vers un seul).
-__global__ void hsv2rgb(const float f_HueTable[],const float f_SaturationTable[],const float f_ValueTable[], unsigned long f_sizeTable, unsigned char f_PixelTable[]){
+__global__ void hsv2rgb(const float f_HueTable[],const float f_SaturationTable[],const float f_ValueTable[], unsigned int f_sizeTable, unsigned char f_PixelTable[]){
 
     int tidx = threadIdx.x + blockIdx.x*blockDim.x;
     int tidy = threadIdx.y + blockIdx.y*blockDim.y;
@@ -165,7 +219,7 @@ __global__ void hsv2rgb(const float f_HueTable[],const float f_SaturationTable[]
 }
 
 // Fonction qui à partir de la composante V de chaque pixel, calcule l’histogramme de l’image.
-__global__ void histogram(const float f_ValueTable[], unsigned long sizeTable, const unsigned int f_NbEchantillon, unsigned int f_HistoTable[]) {
+__global__ void histogram(const float f_ValueTable[], unsigned int sizeTable, const unsigned int f_NbEchantillon, unsigned int f_HistoTable[]) {
     int tidx = blockIdx.x * blockDim.x + threadIdx.x ; // tidx
 	for (; tidx < sizeTable; tidx += gridDim.x * blockDim.x) {
         int indexHist = roundf(f_ValueTable[tidx] * f_NbEchantillon);
@@ -175,7 +229,7 @@ __global__ void histogram(const float f_ValueTable[], unsigned long sizeTable, c
 }
 
 // À partir de l’histogramme, applique la fonction de répartition r(l)
-__global__ void repart(const unsigned int f_HistoTable[], unsigned long sizeTable, unsigned int f_RepartionTable[]) {
+__global__ void repart(const unsigned int f_HistoTable[], unsigned int sizeTable, unsigned int f_RepartionTable[]) {
     //__shared__ repartitionTable [sizeTable]; 
 
     int tidx = blockIdx.x * blockDim.x + threadIdx.x ; // tidx
@@ -196,7 +250,7 @@ __global__ void repart(const unsigned int f_HistoTable[], unsigned long sizeTabl
 }
 
 // À partir de la répartition précédente, “étaler” l’histogramme.
-__global__ void equalization(const unsigned int f_RepartionTable[], unsigned long sizeTableRepartition, float f_ValueTable[], unsigned long sizeValueTable) {
+__global__ void equalization(const unsigned int f_RepartionTable[], unsigned int sizeTableRepartition, float f_ValueTable[], unsigned int sizeValueTable) {
     int tidx = blockIdx.x * blockDim.x + threadIdx.x ; // tidx
     // sizeTableRepartition = L
     // sizeValueTable = n

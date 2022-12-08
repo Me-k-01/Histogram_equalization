@@ -46,24 +46,6 @@ int main( int argc, char **argv )
 
 
 	// tests des fonctions CPU
-	/*
-	Image outputImage;
-	std::vector<float> htable, stable, vtable;
-	std::vector<unsigned char> pixels;
-	std::vector<unsigned int> histoTable, repartTable;
-	rgb2hsv(inputImage, htable,stable,vtable);
-
-	histogram(vtable, 256, histoTable);
-	repart(histoTable, repartTable);
-	equalization(repartTable, vtable);
-	
-	hsv2rgb(htable,stable,vtable,pixels);
-	outputImage._height = inputImage._height;
-	outputImage._width = inputImage._width;
-	outputImage._nbChannels = inputImage._nbChannels;
-	outputImage._pixels = pixels.data();
-*/
-
 	const int imagesize = inputImage._height* inputImage._width;
 
 	float * hueTable = new float[imagesize],* saturationTable = new float[imagesize],* valueTable = new float[imagesize];

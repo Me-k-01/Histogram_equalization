@@ -41,15 +41,12 @@ int main( int argc, char **argv )
 	// Get input image
 	std::cout << "Loading image: " << fileName << std::endl;
 	Image inputImage;
-	Image outputImage;
     inputImage.load(fileName);
     std::cout << "Image has " << inputImage._width << " x " << inputImage._height << " pixels and has " << inputImage._nbChannels << " channel of color" << std::endl;
 
-
 	// tests des fonctions GPU
-	gpuCall(inputImage,256,outputImage);
-	
-	outputImage.save(outPutImgDir + "test_fonc_gpu_celestin.png");
+	gpuCallTest(inputImage,256);
+	//inputImage.save(outPutImgDir + "test_fonc_gpu_celestin.png");
 
 	return 0;
 }

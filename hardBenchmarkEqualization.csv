@@ -1,0 +1,24 @@
+==14644== NVPROF is profiling process 14644, command: .\test.exe -f .\img\Chateau.png
+==14644== Profiling application: .\test.exe -f .\img\Chateau.png
+==14644== Profiling result:
+"Type","Time(%)","Time","Calls","Avg","Min","Max","Name"
+,%,s,,ms,ms,ms,
+"GPU activities",99.761623,2.303955,1024,2.249956,0.892587,195.511325,"equalization(unsigned int const *, unsigned int, float*, unsigned int)"
+"GPU activities",0.226150,0.005223,1,5.222839,5.222839,5.222839,"histogram(float const *, unsigned int, unsigned int, unsigned int*)"
+"GPU activities",0.007224,0.000167,1,0.166824,0.166824,0.166824,"[CUDA memcpy HtoD]"
+"GPU activities",0.003082,0.000071,1,0.071172,0.071172,0.071172,"rgb2hsv(unsigned char const *, unsigned int, float*, float*, float*)"
+"GPU activities",0.001922,0.000044,1,0.044386,0.044386,0.044386,"repart(unsigned int const *, unsigned int, unsigned int*)"
+"API calls",93.350559,2.309717,7,329.959500,0.006800,2307.854000,"cudaFree"
+"API calls",5.406376,0.133767,7,19.109528,0.003000,133.047100,"cudaMalloc"
+"API calls",1.082975,0.026795,1,26.795400,26.795400,26.795400,"cuDevicePrimaryCtxRelease"
+"API calls",0.147847,0.003658,1027,0.003561,0.002600,0.134200,"cudaLaunchKernel"
+"API calls",0.009118,0.000226,1,0.225600,0.225600,0.225600,"cudaMemcpy"
+"API calls",0.001855,0.000046,2,0.022950,0.013200,0.032700,"cuModuleUnload"
+"API calls",0.000715,0.000018,101,0.000175,0.000100,0.000800,"cuDeviceGetAttribute"
+"API calls",0.000267,0.000007,3,0.002200,0.000200,0.005900,"cuDeviceGetCount"
+"API calls",0.000125,0.000003,1,0.003100,0.003100,0.003100,"cuDeviceGetName"
+"API calls",0.000089,0.000002,2,0.001100,0.000300,0.001900,"cuDeviceGet"
+"API calls",0.000028,0.000001,1,0.000700,0.000700,0.000700,"cuModuleGetLoadingMode"
+"API calls",0.000016,0.000000,1,0.000400,0.000400,0.000400,"cuDeviceTotalMem"
+"API calls",0.000016,0.000000,1,0.000400,0.000400,0.000400,"cuDeviceGetLuid"
+"API calls",0.000012,0.000000,1,0.000300,0.000300,0.000300,"cuDeviceGetUuid"

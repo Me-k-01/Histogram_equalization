@@ -255,7 +255,7 @@ void hsv2rgb(const std::vector<float> & f_HueTable, const std::vector<float> & f
 }
 
 //version avec des tableaux c pour une meilleur comparaison avec GPU
-void hsv2rgb(const float f_HueTable[],const float f_SaturationTable[],const float f_ValueTable[], unsigned long sizeTable, unsigned char f_PixelTable[]){
+void hsv2rgb(const float f_HueTable[],const float f_SaturationTable[],const float f_ValueTable[], unsigned int sizeTable, unsigned char f_PixelTable[]){
 
     for (int i = 0; i < sizeTable; i++)
     {
@@ -314,7 +314,7 @@ void histogram(const std::vector<float> & f_ValueTable, const unsigned int f_NbE
 }
 
 //version avec des tableaux c pour une meilleur comparaison avec GPU
-void histogram(const float f_ValueTable[], unsigned long sizeTable, const unsigned int f_NbEchantillon, unsigned int f_HistoTable[]){
+void histogram(const float f_ValueTable[], unsigned int sizeTable, const unsigned int f_NbEchantillon, unsigned int f_HistoTable[]){
     for (unsigned int i = 0; i < f_NbEchantillon; i++){
         f_HistoTable[i] = 0;
     }
@@ -340,7 +340,7 @@ void repart(const std::vector<unsigned int> & f_HistoTable, std::vector<unsigned
 }
 
 //version avec des tableaux c pour une meilleur comparaison avec GPU
-void repart(const unsigned int f_HistoTable[], unsigned long sizeTable, unsigned int f_RepartionTable[]){
+void repart(const unsigned int f_HistoTable[], unsigned int sizeTable, unsigned int f_RepartionTable[]){
     f_RepartionTable[0] = f_HistoTable[0];
 
     for (size_t i = 1; i < sizeTable; i++)
@@ -365,7 +365,7 @@ void equalization(const std::vector<unsigned int> & f_RepartionTable,  std::vect
 }
 
 //version avec des tableaux c pour une meilleur comparaison avec GPU
-void equalization(const unsigned int f_RepartionTable[], unsigned long sizeTableRepartition, float f_ValueTable[], unsigned long sizeValueTable){
+void equalization(const unsigned int f_RepartionTable[], unsigned int sizeTableRepartition, float f_ValueTable[], unsigned int sizeValueTable){
     float coefficient = ((float)sizeTableRepartition - 1.f)/(((float)sizeTableRepartition)*sizeValueTable);
 
     sizeTableRepartition -= 1 ; //évitera la redondance dans la boucle
