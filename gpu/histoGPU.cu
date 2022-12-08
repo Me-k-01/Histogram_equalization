@@ -102,11 +102,10 @@ void gpuCallTest(Image & f_Image, int nbEchantillon){
 
     for (int i = 1; i < 1025; i++)
     {
-        
-    dim3 blocEqualization(i,1,1);
-    dim3 grilleEqualization(1,1,1);
-        
-    equalization<<<blocEqualization,grilleEqualization>>>(repartTable, nbEchantillon, valueTable, sizeImage);
+        dim3 blocEqualization(i,1,1);
+        dim3 grilleEqualization(1,1,1);
+            
+        equalization<<<blocEqualization,grilleEqualization>>>(repartTable, nbEchantillon, valueTable, sizeImage);
     }
     
     
@@ -123,104 +122,99 @@ void gpuCallTest(Image & f_Image, int nbEchantillon){
 
 // Fonction qui pour chaque pixel de l’image, calcule sa valeur dans l’espace HSV, et répartit le résultat dans trois tableaux différents
 __global__ void rgb2hsv(const unsigned char f_PixelTable[], unsigned int f_sizeTable, float f_HueTable[],float f_SaturationTable[],float f_ValueTable[]){
-    int tidx = threadIdx.x + blockIdx.x*blockDim.x;
-    int tidy = threadIdx.y + blockIdx.y*blockDim.y;
-    int tidglobal = tidx + tidy *blockDim.x*gridDim.x;
-    int nbThreadTotal = blockDim.x*gridDim.x*blockDim.y*gridDim.y;
+    int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+    int tidy = threadIdx.y + blockIdx.y * blockDim.y;
+    int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
+    int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
 
-    while (tidglobal < f_sizeTable)
+    while (tidGlobal < f_sizeTable)
     {
-        float red = (float)f_PixelTable[tidglobal*3];
-        float green = (float)f_PixelTable[tidglobal*3+1];
-        float blue = (float)f_PixelTable[tidglobal*3+2];
+        float red   = (float)f_PixelTable[tidGlobal*3];
+        float green = (float)f_PixelTable[tidGlobal*3 + 1];
+        float blue  = (float)f_PixelTable[tidGlobal*3 + 2];
 
         float colormax = fmaxf(red, fmaxf(green, blue));
         float colormin = fminf(red, fminf(green, blue));
 
-        f_ValueTable[tidglobal] = colormax/255.0f;
+        f_ValueTable[tidGlobal] = colormax / 255.f;
         
-        if(colormax > 0){
-            f_SaturationTable[tidglobal] = 1.0f-(colormin/colormax);
-        }
-        else
-        {
-            f_SaturationTable[tidglobal] = 0.0f;
+        if (colormax > 0) {
+            f_SaturationTable[tidGlobal] = 1.f - colormin/colormax;
+        } else {
+            f_SaturationTable[tidGlobal] = 0.f;
         }
 
-        if(colormax - colormin > 0){
-
-            float hue = (acosf((red - (green/2.0f + blue/2.0f))/sqrtf(red*red + green*green + blue*blue - (red*green + red*blue + green*blue))))*180/PI;
-            if( blue > green){
-                f_HueTable[tidglobal] = 360.0f - hue;
+        if (colormax - colormin > 0) {
+            float hue = acosf( 
+                (red - (green / 2.f + blue/2.f)) / sqrtf(red*red + green*green + blue*blue - (red*green + red*blue + green*blue))
+            ) * 180.f / PI;
+            
+            if (blue > green) {
+                f_HueTable[tidGlobal] = 360.f - hue;
+            } else {
+                f_HueTable[tidGlobal] = hue;
             }
-            else{
-                f_HueTable[tidglobal] = hue;
-            }
+        } else {
+            f_HueTable[tidGlobal] = 0.f;
         }
-        else{
-                f_HueTable[tidglobal] = 0.0f;
-        }
-        tidglobal += nbThreadTotal;
+        tidGlobal += nbThreadTotal;
     }
     
 }
 
 // Transformation de HSV vers RGB (donc de trois tableaux vers un seul).
-__global__ void hsv2rgb(const float f_HueTable[],const float f_SaturationTable[], const float f_ValueTable[], unsigned int f_sizeTable, unsigned char f_PixelTable[]){
+__global__ void hsv2rgb(const float f_HueTable[], const float f_SaturationTable[], const float f_ValueTable[], const unsigned int f_sizeTable, unsigned char f_PixelTable[]) {
 
-    int tidx = threadIdx.x + blockIdx.x*blockDim.x;
-    int tidy = threadIdx.y + blockIdx.y*blockDim.y;
-    int tidglobal = tidx + tidy *blockDim.x*gridDim.x;
-    int nbThreadTotal = blockDim.x*gridDim.x*blockDim.y*gridDim.y;
+    const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+    const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
+    const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
+    int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
 
+    while (tidGlobal < f_sizeTable) {
+        const int pixelIndex = tidGlobal * 3; 
 
-    while (tidglobal < f_sizeTable)
-    {
-        float colormax = 255.0f * f_ValueTable[tidglobal];
-        float colormin = colormax*(1.0f-f_SaturationTable[tidglobal]);
+        const float cMax = 255.f * f_ValueTable[tidGlobal];
+        const float cMin = cMax  * (1.f - f_SaturationTable[tidGlobal]);
+        const float h    = f_HueTable[tidGlobal];
+        const float cAdd = (cMax - cMin) * (1.f - fabsf(fmodf(h / 60.f, 2.f) - 1.f));
+        const unsigned char colorMax   = roundf(cMax);
+        const unsigned char colorMin   = roundf(cMin);
+        const unsigned char colorInter = roundf(cAdd + cMin);
 
-        float h = f_HueTable[tidglobal];
-
-        float z = (colormax - colormin)* (1.0f - fabsf(fmodf(h/60.0f,2.0f) -1.0f));
-
-        if(h < 60){
-            f_PixelTable[tidglobal*3] = (unsigned char)roundf(colormax);
-            f_PixelTable[tidglobal*3+1] = ((unsigned char)roundf(z + colormin));
-            f_PixelTable[tidglobal*3+2] = ((unsigned char)roundf(colormin));
+        if (h < 60) {
+            f_PixelTable[pixelIndex]     = colorMax;
+            f_PixelTable[pixelIndex + 1] = colorInter;
+            f_PixelTable[pixelIndex + 2] = colorMin;
+        } else if (h < 120) {
+            f_PixelTable[pixelIndex]     = colorInter;
+            f_PixelTable[pixelIndex + 1] = colorMax;
+            f_PixelTable[pixelIndex + 2] = colorMin;
+        } else if (h < 180) {
+            f_PixelTable[pixelIndex]     = colorMin;
+            f_PixelTable[pixelIndex + 1] = colorMax;
+            f_PixelTable[pixelIndex + 2] = colorInter;
+        } else if (h < 240) {
+            f_PixelTable[pixelIndex]     = colorMin;
+            f_PixelTable[pixelIndex + 1] = colorInter;
+            f_PixelTable[pixelIndex + 2] = colorMax;
+        } else if (h < 300) {
+            f_PixelTable[pixelIndex]     = colorInter;
+            f_PixelTable[pixelIndex + 1] = colorMin;
+            f_PixelTable[pixelIndex + 2] = colorMax;
+        } else { // si (h < 360)
+            f_PixelTable[pixelIndex]     = colorMax;
+            f_PixelTable[pixelIndex + 1] = colorMin;
+            f_PixelTable[pixelIndex + 2] = colorInter;
         }
-        else if (h < 120){
-            f_PixelTable[tidglobal*3] = ((unsigned char)roundf(z + colormin));
-            f_PixelTable[tidglobal*3+1] = ((unsigned char)roundf(colormax));
-            f_PixelTable[tidglobal*3+2] = ((unsigned char)roundf(colormin));
-        }
-        else if (h < 180){
-            f_PixelTable[tidglobal*3] = ((unsigned char)roundf(colormin));
-            f_PixelTable[tidglobal*3+1] = ((unsigned char)roundf(colormax));
-            f_PixelTable[tidglobal*3+2] = ((unsigned char)roundf(z + colormin));
-        }
-        else if (h < 240){
-            f_PixelTable[tidglobal*3] = ((unsigned char)roundf(colormin));
-            f_PixelTable[tidglobal*3+1] = ((unsigned char)roundf(z + colormin));
-            f_PixelTable[tidglobal*3+2] = ((unsigned char)roundf(colormax));
-        }
-        else if (h < 300){
-            f_PixelTable[tidglobal*3] = ((unsigned char)roundf(z + colormin));
-            f_PixelTable[tidglobal*3+1] = ((unsigned char)roundf(colormin));
-            f_PixelTable[tidglobal*3+2] = ((unsigned char)roundf(colormax));
-        }
-        else{
-            f_PixelTable[tidglobal*3] = ((unsigned char)roundf(colormax));
-            f_PixelTable[tidglobal*3+1] = ((unsigned char)roundf(colormin));
-            f_PixelTable[tidglobal*3+2] = ((unsigned char)roundf(z + colormin));
-        }
-        tidglobal+=nbThreadTotal;
+        
+        tidGlobal += nbThreadTotal;
     }
 
 }
 
 // Fonction qui à partir de la composante V de chaque pixel, calcule l’histogramme de l’image.
 __global__ void histogram(const float f_ValueTable[], unsigned int sizeTable, const unsigned int f_NbEchantillon, unsigned int f_HistoTable[]) {
-    int tidx = blockIdx.x * blockDim.x + threadIdx.x ; // tidx
+    int tidx = blockIdx.x * blockDim.x + threadIdx.x;
 	for (; tidx < sizeTable; tidx += gridDim.x * blockDim.x) {
         int indexHist = roundf(f_ValueTable[tidx] * f_NbEchantillon);
         // On doit attendre que les threads ont terminer d'écrire sur la valeur pour incrémenter.
@@ -232,7 +226,7 @@ __global__ void histogram(const float f_ValueTable[], unsigned int sizeTable, co
 __global__ void repart(const unsigned int f_HistoTable[], const unsigned int sizeTable, unsigned int f_RepartionTable[]) {
     //__shared__ repartitionTable [sizeTable]; 
 
-    int tidx = blockIdx.x * blockDim.x + threadIdx.x ; // tidx
+    int tidx = blockIdx.x * blockDim.x + threadIdx.x;
 	for (; tidx < sizeTable; tidx += gridDim.x * blockDim.x) { 
         // Deux façons de procéder:
 
@@ -251,13 +245,13 @@ __global__ void repart(const unsigned int f_HistoTable[], const unsigned int siz
 
 // À partir de la répartition précédente, “étaler” l’histogramme.
 __global__ void equalization(const unsigned int f_RepartionTable[], unsigned int sizeTableRepartition, float f_ValueTable[], const unsigned int sizeValueTable) {
-    int tidx = blockIdx.x * blockDim.x + threadIdx.x ; // tidx
+    int tidx = blockIdx.x * blockDim.x + threadIdx.x;
     // sizeTableRepartition = L
     // sizeValueTable = n
     float coef = ((float)sizeTableRepartition - 1.f) / (float)(sizeValueTable * sizeTableRepartition) ; // (L - 1) / (L * n)
     sizeTableRepartition --; // avoir L-1 avant la boucle
     for (; tidx < sizeValueTable; tidx += gridDim.x * blockDim.x) {
-        unsigned int indiceRepar = roundf(f_ValueTable[tidx] * sizeTableRepartition);
-        f_ValueTable[tidx] = coef * f_RepartionTable[indiceRepar];
+        unsigned int indiceRepart = roundf(f_ValueTable[tidx] * sizeTableRepartition);
+        f_ValueTable[tidx] = coef * f_RepartionTable[indiceRepart];
     }
 }

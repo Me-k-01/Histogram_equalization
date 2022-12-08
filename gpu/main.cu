@@ -45,8 +45,8 @@ int main( int argc, char **argv )
     std::cout << "Image has " << inputImage._width << " x " << inputImage._height << " pixels and has " << inputImage._nbChannels << " channel of color" << std::endl;
 
 	// tests des fonctions GPU 
-	gpuCallTest(inputImage, 256);
-	
+	gpuCall(inputImage, 256);
+
 	std::cout << "Saving image: " << outPutImgDir + "img_repart.png" << std::endl;
 	inputImage.save(outPutImgDir + "img_repart.png" );
 
