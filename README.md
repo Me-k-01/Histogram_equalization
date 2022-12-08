@@ -1,12 +1,15 @@
-# Histogram_equalization
-Projet de TP GPGPU, Master 1
+# Projet égalisation d'histogramme sur GPU
+Ce projet à été réalisé dans le cadre de l'UE GPGPU du Master 1 d'informatique de Limoges
+Deux étudiants ont travaillés sur ce projet:
+- Celestin MARCHAND
+- Florian AUBERVAL
 
 
-Compiler le programme:
+Pour compiler ce programme:
 ```sh
-nvcc -o hist main.cu image.cpp histoGPU.cu
+nvcc -o hist ./gpu/main.cu ./gpu/histoGPU.cu image.cpp
 ```
-Lancer le programme sur une image png:
+Pour cancer la répartition de l'histogramme sur une image png:
 ```sh
 ./hist -f ./img/chateau.png
 ```

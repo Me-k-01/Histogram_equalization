@@ -227,7 +227,7 @@ __global__ void repart(const unsigned int f_HistoTable[], const unsigned int siz
 
         // Soit on fait des calculs redondants de somme
         int res = 0;
-        for (size_t k = 0; k <= tidx; k++) {  
+        for (int k = 0; k <= tidx; k++) {  
             res += f_HistoTable[k]; 
         }
         f_RepartionTable[tidx] = res;
