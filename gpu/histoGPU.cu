@@ -166,7 +166,7 @@ __global__ void hsv2rgb(const float f_HueTable[], const float f_SaturationTable[
         const float cMax = 255.f * f_ValueTable[tidGlobal];
         const float cMin = cMax  * (1.f - f_SaturationTable[tidGlobal]);
         const float hue  = f_HueTable[tidGlobal];
-        const float cAdd = (cMax - cMin) * (1.f - fabsf(fmodf(h / 60.f, 2.f) - 1.f));
+        const float cAdd = (cMax - cMin) * (1.f - fabsf(fmodf(hue / 60.f, 2.f) - 1.f));
         const unsigned char colorMax   = roundf(cMax);
         const unsigned char colorMin   = roundf(cMin);
         const unsigned char colorInter = roundf(cAdd + cMin);
