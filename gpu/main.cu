@@ -15,8 +15,8 @@ void printUsage()
 			<< " \t -f, --file <F>: The image file name" << std::endl 
 			<< "Optional arguments:" << std::endl 
 			<< " \t -o, --output-file <F>: The destination of the generated image. By default, it is saved under ./img_out/output.png" << std::endl 	
-			<< " \t -d, --block-dimension <X,Y>: dimension of each block" << std::endl 
-			<< " \t -D, --grid-dimension  <X,Y>: dimension of the grid" << std::endl 
+			<< " \t -d, --block-dimension <X Y>: dimension of each block" << std::endl 
+			<< " \t -D, --grid-dimension  <X Y>: dimension of the grid" << std::endl 
 			<< " \t -b, --benchmark  <N>: The kernel number to be tested for the benchmark, if this option is not used, the provided image is processed." << std::endl 
 			<< " \t\t\t   0 : rgb2hsv - kernel to convert rgb to hsv" << std::endl 
 			<< " \t\t\t   1 : histogram - kernel to generate an histogram of value"	<< std::endl 	
@@ -45,16 +45,26 @@ int main( int argc, char **argv )
 		if ( !strcmp( argv[i], "-h") || !strcmp( argv[i], "--help") ) {
 			printUsage();
 		} else if ( !strcmp( argv[i], "-f") || !strcmp( argv[i], "--file") ) {
-			if ( sscanf( argv[++i], "%s", fileName ) != 1 )
+			i++;
+			if ( sscanf( argv[i], "%s", fileName ) != 1 )
 				printUsage();
 		} else if ( !strcmp( argv[i], "-o" ) || !strcmp( argv[i], "--output-file")  ) {
-			if	(sscanf( argv[++i], "%s", outFileName ) != 1)
+			i++;
+			if	(sscanf( argv[i], "%s", outFileName ) != 1)
 				printUsage();
 		} else if ( !strcmp( argv[i], "-d" ) || !strcmp( argv[i], "--block-dimension")  ) {
-			if	(sscanf(argv[++i], "%i,%i", &blocsize.x, &blocsize.y) != 1)
+			i++;
+			if	(sscanf(argv[i], "%i", &blocsize.x) != 1)
+				printUsage();
+			i++;
+			if	(sscanf(argv[i], "%i", &blocsize.y) != 1)
 				printUsage();
 		} else if ( !strcmp( argv[i], "-D" ) || !strcmp( argv[i], "--grid-dimension")  ) {
-			if	(sscanf(argv[++i], "%i,%i", &gridsize.x, &gridsize.y) != 1)
+			i++;
+			if	(sscanf(argv[i], "%i", &gridsize.x) != 1)
+				printUsage();
+			i++;
+			if	(sscanf(argv[i], "%i", &gridsize.y) != 1)
 				printUsage();
 		} else if ( !strcmp( argv[i], "-b" ) || !strcmp( argv[i], "--benchmark")  ) {
 			if	(sscanf(argv[++i], "%i", &numKernelToUse) != 1)
