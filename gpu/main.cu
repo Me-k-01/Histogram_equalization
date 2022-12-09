@@ -10,19 +10,20 @@ std::string outPutImgDir = "./img_out/";
 void printUsage() 
 {
 	std::cerr	<< "Usage: " << std::endl 
-			<< "Required argument"
-			<< " \t -f, --file <F>: The image file name" 		
-			<< "Optional arguments:"
-			<< " \t -o, --output-file <F>: The destination of the generated image. By default, it is saved under ./img_out/output.png" 		
-			<< " \t -d, --block-dimension <X,Y>: dimension of each block" 
-			<< " \t -D, --grid-dimension  <X,Y>: dimension of the grid" 	 		
-			<< " \t -b, --benchmark  <N>: The kernel number to be tested for the benchmark, if this option is not used, the provided image is processed." 	
-			<< " \t				      0 : rgb2hsv - kernel to convert rgb to hsv"		
-			<< " \t					  1 : histogram - kernel to generate an histogram of value"		
-			<< " \t					  2 : repart - kernel to repart the histogram"		
-			<< " \t				      3 : equalization - kernel to equalize the histogram"		
-			<< " \t					  4 : hsv2rgb - kernel to convert back hsv to rgb"	
-		    << std::endl << std::endl;
+			<< " \t -h, --help  : Display help" << std::endl 
+			<< "Required argument" << std::endl 
+			<< " \t -f, --file <F>: The image file name" << std::endl 
+			<< "Optional arguments:" << std::endl 
+			<< " \t -o, --output-file <F>: The destination of the generated image. By default, it is saved under ./img_out/output.png" << std::endl 	
+			<< " \t -d, --block-dimension <X,Y>: dimension of each block" << std::endl 
+			<< " \t -D, --grid-dimension  <X,Y>: dimension of the grid" << std::endl 
+			<< " \t -b, --benchmark  <N>: The kernel number to be tested for the benchmark, if this option is not used, the provided image is processed." << std::endl 
+			<< " \t\t\t   0 : rgb2hsv - kernel to convert rgb to hsv" << std::endl 
+			<< " \t\t\t   1 : histogram - kernel to generate an histogram of value"	<< std::endl 	
+			<< " \t\t\t   2 : repart - kernel to repart the histogram" << std::endl 
+			<< " \t\t\t   3 : equalization - kernel to equalize the histogram" << std::endl 	
+			<< " \t\t\t   4 : hsv2rgb - kernel to convert back hsv to rgb" << std::endl 
+		    << std::endl; 
 	exit( EXIT_FAILURE );
 }
  
@@ -41,7 +42,9 @@ int main( int argc, char **argv )
 		printUsage();
 	}
 	for ( int i = 1; i < argc; ++i ) {
-		if ( !strcmp( argv[i], "-f") || !strcmp( argv[i], "--file") ) {
+		if ( !strcmp( argv[i], "-h") || !strcmp( argv[i], "--help") ) {
+			printUsage();
+		} else if ( !strcmp( argv[i], "-f") || !strcmp( argv[i], "--file") ) {
 			if ( sscanf( argv[++i], "%s", fileName ) != 1 )
 				printUsage();
 		} else if ( !strcmp( argv[i], "-o" ) || !strcmp( argv[i], "--output-file")  ) {
