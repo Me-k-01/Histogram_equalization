@@ -257,13 +257,13 @@ __global__ void repart(const unsigned int f_HistoTable[], const unsigned int f_s
 }
 
 // À partir de la répartition précédente, “étaler” l’histogramme.
-__global__ void equalization(const unsigned int f_RepartionTable[], const unsigned int f_sizeTableRepartition, float f_ValueTable[], const unsigned int sizeValueTable) {
+__global__ void equalization(const unsigned int f_RepartionTable[], const unsigned int f_sizeTableRepartition, float f_ValueTable[], const unsigned int sizeValueTable) { 
+    // f_sizeTableRepartition = L ; sizeValueTable = n
     const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
     const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
     const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
     int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
-    // f_sizeTableRepartition = L
-    // sizeValueTable = n
+    
     float coef = ((float)f_sizeTableRepartition - 1.f) / (float)(sizeValueTable * f_sizeTableRepartition) ; // (L - 1) / (L * n)
     for (; tidGlobal < sizeValueTable; tidGlobal += nbThreadTotal) {
         unsigned int indiceRepart = roundf(f_ValueTable[tidGlobal] * (f_sizeTableRepartition-1));

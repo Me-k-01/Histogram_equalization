@@ -1,5 +1,4 @@
 hist
-bench
 *.exp
 *.lib
 *.exe
