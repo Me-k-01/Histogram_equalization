@@ -1,7 +1,8 @@
 #include <iostream> 
 #include <string>
 #include <cstring>
- 
+#include <iomanip>
+
 #include "histoCPU.hpp" 
 #include "../../image.hpp"
  
@@ -52,13 +53,24 @@ int main( int argc, char **argv )
 	int nbEchantillon = 256;
 	unsigned int * histoTable = new unsigned int[nbEchantillon], * repartTable = new unsigned int[nbEchantillon];
 
-	rgb2hsv(inputImage, hueTable, saturationTable, valueTable);
-	histogram(valueTable, imagesize, nbEchantillon, histoTable);
-	repart(histoTable, nbEchantillon, repartTable);
-	equalization(repartTable, nbEchantillon, valueTable, imagesize);
-	hsv2rgb(hueTable,saturationTable,valueTable, imagesize,inputImage._pixels);
+	float rgb2hsvTime = rgb2hsv(inputImage, hueTable, saturationTable, valueTable);
+	float histogramTime = histogram(valueTable, imagesize, nbEchantillon, histoTable);
+	float repartTime = repart(histoTable, nbEchantillon, repartTable);
+	float equalizationTime = equalization(repartTable, nbEchantillon, valueTable, imagesize);
+	float hsv2rgbTime = hsv2rgb(hueTable,saturationTable,valueTable, imagesize,inputImage._pixels);
 
-	inputImage.save(outPutImgDir + "test_all_fonc.png");
+	inputImage.save(outPutImgDir + "output.png");
+
+	std::cout <<"Complete !" << std::endl << std::endl;
+
+	std::cout <<"=================================================================" << std::endl;
+	std::cout <<"   Recapitulatif des temps d'execution pour chaque fonction :    " << std::endl;
+	std::cout << "\trgb2hsv      -> " << std::setprecision(10) << rgb2hsvTime << " milisecondes" << std::endl;
+	std::cout << "\thistogram    -> " << std::setprecision(10) << histogramTime << " milisecondes" << std::endl;
+	std::cout << "\trepart       -> " << std::setprecision(10) << repartTime << " milisecondes" << std::endl;
+	std::cout << "\tequalization -> " << std::setprecision(10) << equalizationTime << " milisecondes" << std::endl;
+	std::cout << "\thsv2rgb      -> " << std::setprecision(10) << hsv2rgbTime << " milisecondes" << std::endl;
+	std::cout <<"=================================================================" << std::endl;
 
 	return 0;
 }
