@@ -63,8 +63,8 @@ void gpuCall(Image & f_Image, const int f_nbEchantillon){
 }
 
 
-// fonction d'appel au fonction gpu pour tests
-void gpuCallTest(Image & f_Image, const int f_nbEchantillon, dim3 f_bloc, dim3 f_grille, kernelToTest f_kernel){
+// fonction d'appel aux fonctions gpu pour benchmark
+void gpuCallBenchmark(Image & f_Image, const int f_nbEchantillon, dim3 f_bloc, dim3 f_grille, kernelToTest f_kernel){
 
     // Tailles 
     unsigned int sizeImage = f_Image._width * f_Image._height;
@@ -86,46 +86,58 @@ void gpuCallTest(Image & f_Image, const int f_nbEchantillon, dim3 f_bloc, dim3 f
 
     HANDLE_ERROR(cudaMemcpy(pixelTableIn, f_Image._pixels, sizeImageInBytes, cudaMemcpyHostToDevice));
     
-    dim3 blocRGB2HSV(32,32,1);
-    dim3 grilleRGB2HSV(1,1,1);
-    dim3 blocHistogramme(32,1,1);
-    dim3 grilleHistogramme(1,1,1);
-    dim3 blocRepart(32,1,1);
-    dim3 grilleRepart(1,1,1);
-    dim3 blocEqualization(32,1,1);
-    dim3 grilleEqualization(1,1,1);
+    dim3 defaultBlocSize(32,1,1);
+    dim3 defaultGridSize(1,1,1);
 
     switch (f_kernel) {
         case kernelToTest::RGB2HSV : 
             rgb2hsv<<<f_bloc, f_grille>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
             break;
-            
+        case kernelToTest::RGB2HSV_MINIMUMDIVERGENCE : 
+            rgb2hsvWithMinimumDivergence<<<f_bloc, f_grille>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
+            break;
+        case kernelToTest::RGB2HSV_COORDINATEDOUTPUTS : 
+            rgb2hsvWithCoordinatedOutputs<<<f_bloc, f_grille>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
+            break;
         case kernelToTest::HISTOGRAM :
-            rgb2hsv<<<blocRGB2HSV, grilleRGB2HSV>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
+            rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
             histogram<<<f_bloc, f_grille>>>(valueTable, sizeImage, f_nbEchantillon, histoTable);
             break;
-            
+        case kernelToTest::HISTOGRAM_WITHSHAREDMEMORY :
+            rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
+            histogramWithSharedMemory<<<f_bloc, f_grille, f_nbEchantillon*sizeof(unsigned int)>>>(valueTable, sizeImage, f_nbEchantillon, histoTable);
+            break;
         case kernelToTest::REPART :
-            rgb2hsv<<<blocRGB2HSV, grilleRGB2HSV>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
-            histogram<<<blocHistogramme, grilleHistogramme>>>(valueTable, sizeImage, f_nbEchantillon, histoTable);
+            rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
+            histogram<<<defaultBlocSize, defaultGridSize>>>(valueTable, sizeImage, f_nbEchantillon, histoTable);
             repart<<<f_bloc, f_grille>>>(histoTable, f_nbEchantillon, repartTable);
             break;
-
         case kernelToTest::EQUALIZATION :
-            rgb2hsv<<<blocRGB2HSV, grilleRGB2HSV>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
-            histogram<<<blocHistogramme, grilleHistogramme>>>(valueTable, sizeImage, f_nbEchantillon, histoTable);
-            repart<<<blocRepart, grilleRepart>>>(histoTable, f_nbEchantillon, repartTable);
+            rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
+            histogram<<<defaultBlocSize, defaultGridSize>>>(valueTable, sizeImage, f_nbEchantillon, histoTable);
+            repart<<<defaultBlocSize, defaultGridSize>>>(histoTable, f_nbEchantillon, repartTable);
             equalization<<<f_bloc, f_grille>>>(repartTable, f_nbEchantillon, valueTable, sizeImage);
-            break;        
+            break;    
+        case kernelToTest::EQUALIZATION_CONSTANTCOEFFICIENT :
+        {
+            float coefficientEqualization = ((float)f_nbEchantillon - 1.f) / (float)(sizeImage * f_nbEchantillon);
+		    HANDLE_ERROR(cudaMemcpyToSymbol(deviceCoefficientEqualization, &coefficientEqualization, sizeof(float)));
 
+            rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
+            histogram<<<defaultBlocSize, defaultGridSize>>>(valueTable, sizeImage, f_nbEchantillon, histoTable);
+            repart<<<defaultBlocSize, defaultGridSize>>>(histoTable, f_nbEchantillon, repartTable);
+            equalizationWithConstantCoefficient<<<f_bloc, f_grille>>>(repartTable, f_nbEchantillon, valueTable, sizeImage);
+            break;
+        }
         case kernelToTest::HSV2RGB : 
-            rgb2hsv<<<blocRGB2HSV, grilleRGB2HSV>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
-            histogram<<<blocHistogramme, grilleHistogramme>>>(valueTable, sizeImage, f_nbEchantillon, histoTable);
-            repart<<<blocRepart, grilleRepart>>>(histoTable, f_nbEchantillon, repartTable);
-            equalization<<<blocEqualization, grilleEqualization>>>(repartTable, f_nbEchantillon, valueTable, sizeImage);
+            rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
+            histogram<<<defaultBlocSize, defaultGridSize>>>(valueTable, sizeImage, f_nbEchantillon, histoTable);
+            repart<<<defaultBlocSize, defaultGridSize>>>(histoTable, f_nbEchantillon, repartTable);
+            equalization<<<defaultBlocSize, defaultGridSize>>>(repartTable, f_nbEchantillon, valueTable, sizeImage);
             hsv2rgb<<<f_bloc,f_grille>>>(hueTable,saturationTable,valueTable, sizeImage, pixelTableOut);
             break;
     }
+
     HANDLE_ERROR(cudaFree(pixelTableIn));
     HANDLE_ERROR(cudaFree(pixelTableOut));
     HANDLE_ERROR(cudaFree(hueTable));
@@ -152,14 +164,29 @@ __global__ void rgb2hsv(const unsigned char f_PixelTable[], const unsigned int f
         const float colorMin = fminf(red, fminf(green, blue));
 
         f_ValueTable[tidGlobal]      = colorMax / 255.f;
-        f_SaturationTable[tidGlobal] = colorMax > 0 ? 1.f - colorMin/colorMax : 0.f;
+        if (colorMax > 0)
+        {
+            f_SaturationTable[tidGlobal] =  1.f - colorMin/colorMax;
+        }
+        else
+        {
+            f_SaturationTable[tidGlobal] =  0.f;
+        }
+        
         
         if (colorMax - colorMin > 0) {
             float hue = acosf( 
                 (red - (green / 2.f + blue/2.f)) / sqrtf(red*red + green*green + blue*blue - (red*green + red*blue + green*blue))
             ) * 180.f / PI;
 
-            f_HueTable[tidGlobal] = blue > green ? 360.f - hue : hue;
+            if (blue > green)
+            {
+                f_HueTable[tidGlobal] = 360.f -hue;
+            }
+            else
+            {
+                f_HueTable[tidGlobal] = hue;
+            }
         } else {
             f_HueTable[tidGlobal] = 0.f;
         }
@@ -168,6 +195,184 @@ __global__ void rgb2hsv(const unsigned char f_PixelTable[], const unsigned int f
     }
     
 }
+
+// amélioration qui evite les branches en utilisant le résultat des test logique directement dans la formule (sous forme d'entier) 
+__global__ void rgb2hsvWithMinimumDivergence(const unsigned char f_PixelTable[], const unsigned int f_sizeTable, float f_HueTable[], float f_SaturationTable[], float f_ValueTable[]){
+    const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+    const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
+    const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
+    int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
+
+    while (tidGlobal < f_sizeTable)
+    {
+        const float red   = (float)f_PixelTable[tidGlobal*3];
+        const float green = (float)f_PixelTable[tidGlobal*3 + 1];
+        const float blue  = (float)f_PixelTable[tidGlobal*3 + 2];
+
+        const float colorMax = fmaxf(red, fmaxf(green, blue));
+        const float colorMin = fminf(red, fminf(green, blue));
+
+        f_ValueTable[tidGlobal]      = colorMax / 255.f;
+        f_SaturationTable[tidGlobal] = 0.f + (colorMax > 0) * (1.f - colorMin/colorMax) ;
+        
+        if (colorMax - colorMin > 0) {
+            float hue = acosf( 
+                (red - (green / 2.f + blue/2.f)) / sqrtf(red*red + green*green + blue*blue - (red*green + red*blue + green*blue))
+            ) * 180.f / PI;
+
+            f_HueTable[tidGlobal] = (blue > green)*(360.f -hue) + (blue > green)*(hue);
+        } else {
+            f_HueTable[tidGlobal] = 0.f;
+        }
+
+        tidGlobal += nbThreadTotal;
+    }
+    
+}
+
+// amélioration pour faire les accès mémoires en simultanées  
+__global__ void rgb2hsvWithCoordinatedOutputs(const unsigned char f_PixelTable[], const unsigned int f_sizeTable, float f_HueTable[], float f_SaturationTable[], float f_ValueTable[]){
+    const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+    const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
+    const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
+    int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
+
+    while (tidGlobal < f_sizeTable)
+    {
+        const float red   = (float)f_PixelTable[tidGlobal*3];
+        const float green = (float)f_PixelTable[tidGlobal*3 + 1];
+        const float blue  = (float)f_PixelTable[tidGlobal*3 + 2];
+
+        const float colorMax = fmaxf(red, fmaxf(green, blue));
+        const float colorMin = fminf(red, fminf(green, blue));
+
+        float valueNumber      = colorMax / 255.f;
+        float saturationNumber = 0.f + (colorMax > 0) * (1.f - colorMin/colorMax) ;
+        
+        float hueNumber;
+        if (colorMax - colorMin > 0) {
+            float hue = acosf( 
+                (red - (green / 2.f + blue/2.f)) / sqrtf(red*red + green*green + blue*blue - (red*green + red*blue + green*blue))
+            ) * 180.f / PI;
+
+            hueNumber = (blue > green)*(360.f -hue) + (blue > green)*(hue);
+        } else {
+            hueNumber = 0.f;
+        }
+
+        f_ValueTable[tidGlobal] = valueNumber;
+        f_SaturationTable[tidGlobal] = saturationNumber;
+        f_HueTable[tidGlobal] = hueNumber;
+
+        tidGlobal += nbThreadTotal;
+    }
+    
+}
+
+
+// Fonction qui à partir de la composante V de chaque pixel, calcule l’histogramme de l’image.
+__global__ void histogram(const float f_ValueTable[], unsigned int f_sizeTable, const unsigned int f_nbEchantillon, unsigned int f_HistoTable[]) {
+    const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+    const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
+    const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
+    int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
+
+	for (; tidGlobal < f_sizeTable; tidGlobal += nbThreadTotal) { 
+        int indexHist = roundf(f_ValueTable[tidGlobal] * f_nbEchantillon);
+        // On doit attendre que les threads aient terminé d'écrire sur la valeur pour incrémenter.
+        atomicAdd(&f_HistoTable[indexHist], 1.f);
+    }
+}
+
+// code de la fonction suivante inspiré par le page web : https://developer.nvidia.com/blog/gpu-pro-tip-fast-histograms-using-shared-atomics-maxwell/
+// amélioration avec des histogrammes partiels intermédiaire
+__global__ void histogramWithSharedMemory(const float f_ValueTable[], unsigned int f_sizeTable, const unsigned int f_nbEchantillon, unsigned int f_HistoTable[]) {
+    const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+    const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
+    const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
+    int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
+
+    //création de l'historgramme du block et initialisation à 0
+    extern __shared__ unsigned int histo[];
+    
+    // vérification a faire si le tableau histo n'est pas initialisé à 0 par défaut 
+    /*for (int i = 0; i < f_nbEchantillon; i++)
+    {
+        histo[i] =0;
+    }
+    __syncthreads();*/
+
+    //calcule des histogramme partiels
+	for (; tidGlobal < f_sizeTable; tidGlobal += nbThreadTotal) { 
+        int indexHist = roundf(f_ValueTable[tidGlobal] * f_nbEchantillon);
+        atomicAdd(&histo[indexHist], 1);
+    }
+    __syncthreads();
+
+    //calcule de l'histogramme complet
+    int tidInBlock = threadIdx.x + threadIdx.y * blockDim.x;
+    int nbThreadInBlock = blockDim.x * blockDim.y;
+    for (; tidInBlock < f_nbEchantillon; tidInBlock += nbThreadInBlock)
+    {
+        atomicAdd(&f_HistoTable[tidInBlock], histo[tidInBlock]);
+    }
+    
+}
+
+
+// À partir de l’histogramme, applique la fonction de répartition r(l)
+__global__ void repart(const unsigned int f_HistoTable[], const unsigned int f_sizeTable, unsigned int f_RepartionTable[]) {
+    //__shared__ repartitionTable [f_sizeTable]; 
+    const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+    const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
+    const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
+    int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
+
+	for (; tidGlobal < f_sizeTable; tidGlobal += nbThreadTotal) { 
+        // Deux façons de procéder:
+
+        // On attend que la valeur précedente soit calculée avec de la synchronisation de thread
+        //__syncthreads() ou atomicAdd(f_RepartionTable[x - 1])
+        //f_RepartionTable[x] = f_RepartionTable[x - 1] + f_HistoTable[x];
+
+        // Soit on fait des calculs redondants de somme
+        int res = 0;
+        for (int k = 0; k <= tidGlobal; k++) {  
+            res += f_HistoTable[k]; 
+        }
+        f_RepartionTable[tidGlobal] = res;
+    } 
+}
+
+
+// À partir de la répartition précédente, “étaler” l’histogramme.
+__global__ void equalization(const unsigned int f_RepartionTable[], const unsigned int f_sizeTableRepartition, float f_ValueTable[], const unsigned int sizeValueTable) { 
+    // f_sizeTableRepartition = L ; sizeValueTable = n
+    const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+    const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
+    const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
+    int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
+    
+    float coef = ((float)f_sizeTableRepartition - 1.f) / (float)(sizeValueTable * f_sizeTableRepartition) ; // (L - 1) / (L * n)
+    for (; tidGlobal < sizeValueTable; tidGlobal += nbThreadTotal) {
+        unsigned int indiceRepart = roundf(f_ValueTable[tidGlobal] * (f_sizeTableRepartition-1));
+        f_ValueTable[tidGlobal] = coef * f_RepartionTable[indiceRepart];
+    }
+}
+
+// Version de la fonction "equalization" sans calcule du coeficiant de répartition car il est passé en mémoire constante.
+__global__ void equalizationWithConstantCoefficient(const unsigned int f_RepartionTable[], const unsigned int f_sizeTableRepartition, float f_ValueTable[], const unsigned int sizeValueTable) { 
+    const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+    const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
+    const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
+    int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
+    
+    for (; tidGlobal < sizeValueTable; tidGlobal += nbThreadTotal) {
+        unsigned int indiceRepart = roundf(f_ValueTable[tidGlobal] * (f_sizeTableRepartition-1));
+        f_ValueTable[tidGlobal] = deviceCoefficientEqualization * f_RepartionTable[indiceRepart];
+    }
+}
+
 
 // Transformation de HSV vers RGB (donc de trois tableaux vers un seul).
 __global__ void hsv2rgb(const float f_HueTable[], const float f_SaturationTable[], const float f_ValueTable[], const unsigned int f_sizeTable, unsigned char f_PixelTable[]) {
@@ -216,57 +421,4 @@ __global__ void hsv2rgb(const float f_HueTable[], const float f_SaturationTable[
         tidGlobal += nbThreadTotal;
     }
 
-}
-
-// Fonction qui à partir de la composante V de chaque pixel, calcule l’histogramme de l’image.
-__global__ void histogram(const float f_ValueTable[], unsigned int f_sizeTable, const unsigned int f_f_nbEchantillon, unsigned int f_HistoTable[]) {
-    const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
-    const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
-    const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
-    int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
-
-	for (; tidGlobal < f_sizeTable; tidGlobal += nbThreadTotal) { 
-        int indexHist = roundf(f_ValueTable[tidGlobal] * f_f_nbEchantillon);
-        // On doit attendre que les threads ont terminer d'écrire sur la valeur pour incrémenter.
-        atomicAdd(&f_HistoTable[indexHist], 1.f);
-    }
-}
-
-// À partir de l’histogramme, applique la fonction de répartition r(l)
-__global__ void repart(const unsigned int f_HistoTable[], const unsigned int f_sizeTable, unsigned int f_RepartionTable[]) {
-    //__shared__ repartitionTable [f_sizeTable]; 
-    const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
-    const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
-    const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
-    int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
-
-	for (; tidGlobal < f_sizeTable; tidGlobal += nbThreadTotal) { 
-        // Deux façons de procéder:
-
-        // On attend que la valeur précedente soit calculée avec de la synchronisation de thread
-        //__syncthreads() ou atomicAdd(f_RepartionTable[x - 1])
-        //f_RepartionTable[x] = f_RepartionTable[x - 1] + f_HistoTable[x];
-
-        // Soit on fait des calculs redondants de somme
-        int res = 0;
-        for (int k = 0; k <= tidGlobal; k++) {  
-            res += f_HistoTable[k]; 
-        }
-        f_RepartionTable[tidGlobal] = res;
-    } 
-}
-
-// À partir de la répartition précédente, “étaler” l’histogramme.
-__global__ void equalization(const unsigned int f_RepartionTable[], const unsigned int f_sizeTableRepartition, float f_ValueTable[], const unsigned int sizeValueTable) { 
-    // f_sizeTableRepartition = L ; sizeValueTable = n
-    const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
-    const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
-    const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
-    int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
-    
-    float coef = ((float)f_sizeTableRepartition - 1.f) / (float)(sizeValueTable * f_sizeTableRepartition) ; // (L - 1) / (L * n)
-    for (; tidGlobal < sizeValueTable; tidGlobal += nbThreadTotal) {
-        unsigned int indiceRepart = roundf(f_ValueTable[tidGlobal] * (f_sizeTableRepartition-1));
-        f_ValueTable[tidGlobal] = coef * f_RepartionTable[indiceRepart];
-    }
 }

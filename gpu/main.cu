@@ -6,6 +6,7 @@
 #include "../image.hpp"
  
 std::string outPutImgDir = "./img_out/"; 
+const unsigned int maxKernelNumber = 8;
 
 void printUsage() 
 {
@@ -19,10 +20,14 @@ void printUsage()
 			<< " \t -D, --grid-dimension  <X Y>: dimension of the grid" << std::endl 
 			<< " \t -b, --benchmark  <N>: The kernel number to be tested for the benchmark, if this option is not used, the provided image is processed." << std::endl 
 			<< " \t\t\t   0 : rgb2hsv - kernel to convert rgb to hsv" << std::endl 
-			<< " \t\t\t   1 : histogram - kernel to generate an histogram of value"	<< std::endl 	
-			<< " \t\t\t   2 : repart - kernel to repart the histogram" << std::endl 
-			<< " \t\t\t   3 : equalization - kernel to equalize the histogram" << std::endl 	
-			<< " \t\t\t   4 : hsv2rgb - kernel to convert back hsv to rgb" << std::endl 
+			<< " \t\t\t   1 : rgb2hsv_MINIMUMDIVERGENCE - kernel to convert rgb to hsv with minimum divergence" << std::endl 
+			<< " \t\t\t   2 : rgb2hsv_COORDINATEDOUTPUTS - kernel to convert rgb to hsv with coordinated entries" << std::endl 
+			<< " \t\t\t   3 : histogram - kernel to generate an histogram of value"	<< std::endl 	
+			<< " \t\t\t   4 : histogram_WITHSHAREDMEMORY - kernel to generate an histogram of value with use of shared memory"	<< std::endl 	
+			<< " \t\t\t   5 : repart - kernel to repart the histogram" << std::endl 
+			<< " \t\t\t   6 : equalization - kernel to equalize the histogram" << std::endl 
+			<< " \t\t\t   7 : equalization_CONSTANTCOEFFICIENT - kernel to equalize the histogram with the use of constant coefficient" << std::endl 	
+			<< " \t\t\t   8 : hsv2rgb - kernel to convert back hsv to rgb" << std::endl 
 		    << std::endl; 
 	exit( EXIT_FAILURE );
 }
@@ -69,6 +74,9 @@ int main( int argc, char **argv )
 		} else if ( !strcmp( argv[i], "-b" ) || !strcmp( argv[i], "--benchmark")  ) {
 			if	(sscanf(argv[++i], "%i", &numKernelToUse) != 1)
 				printUsage();
+				//on s'assure aussi que le numéro sélectionné n'est pas supérieur au maximum utilisable
+			if (numKernelToUse > maxKernelNumber)
+				printUsage();
 		} else {
 			printUsage();
 		}
@@ -77,7 +85,7 @@ int main( int argc, char **argv )
 	Image inputImage;
     inputImage.load(fileName);
 
-	// On regarde si le programme est a lancer en mode benchmark
+	// On regarde si le programme est a lancer en mode benchmark 
 	if(numKernelToUse == -1){
 		// Si non, on lance le traitement de l'image
 		std::cout << "Loading image: " << fileName << std::endl;
@@ -90,7 +98,7 @@ int main( int argc, char **argv )
 		std::cout << "Complete!" << std::endl;
 	} else { 
 		//Si oui, on effectue le benchmark
-		gpuCallTest(inputImage, 256, blocsize, gridsize, static_cast<kernelToTest>(numKernelToUse));
+		gpuCallBenchmark(inputImage, 256, blocsize, gridsize, static_cast<kernelToTest>(numKernelToUse));
 	}
 
 	return 0;
