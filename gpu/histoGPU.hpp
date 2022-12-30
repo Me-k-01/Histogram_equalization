@@ -5,13 +5,19 @@
 
 #include "../image.hpp"
 
+#define HISTO_SIZE 256
+
 enum kernelToTest {
     RGB2HSV,
     RGB2HSV_MINIMUMDIVERGENCE,
     RGB2HSV_COORDINATEDOUTPUTS,
     HISTOGRAM,
     HISTOGRAM_WITHSHAREDMEMORY,
+    HISTOGRAM_WITHSHAREDMEMORYANDHARCODEDSIZE,
+    HISTOGRAM_WITHMINIMUMCALCULATIONDEPENCIES,
     REPART,
+    REPART_WITHSHAREDMEMORY,
+    REPART_WITHSHAREDMEMORYANDHARCODEDSIZE,
     EQUALIZATION,
     EQUALIZATION_CONSTANTCOEFFICIENT,
     HSV2RGB
@@ -39,10 +45,18 @@ __global__ void rgb2hsvWithCoordinatedOutputs(const unsigned char f_PixelTable[]
 __global__ void histogram(const float f_ValueTable[], unsigned int f_sizeTable, const unsigned int f_NbEchantillon, unsigned int f_HistoTable[]);
 // amélioration avec des histogrammes partiels intermédiaire
 __global__ void histogramWithSharedMemory(const float f_ValueTable[], unsigned int f_sizeTable, const unsigned int f_nbEchantillon, unsigned int f_HistoTable[]);
+// amélioration avec des histogrammes partiels intermédiaire mais la taille est hardcodée
+__global__ void histogramWithSharedMemoryAndHarcodedsSize(const float f_ValueTable[], unsigned int f_sizeTable, unsigned int f_HistoTable[]);
+// amélioration qui enlève au maximum les dépendances de calcules
+__global__ void histogramWithMinimumDependencies(const float f_ValueTable[], unsigned int f_sizeTable, const unsigned int f_nbEchantillon, unsigned int f_HistoTable[]);
 
 // À partir de l’histogramme, applique la fonction de répartition r(l)
 __global__ void repart(const unsigned int f_HistoTable[], const unsigned int f_sizeTable, unsigned int f_RepartionTable[]);
-
+// répartition avec l'utilisation de la shared memory pour le tableau histogramme
+__global__ void repartWithSharedMemory(const unsigned int f_HistoTable[], const unsigned int f_sizeTable, unsigned int f_RepartionTable[]);
+// répartition avec l'utilisation de la shared memory pour le tableau histogramme mais la taille est hardcodée
+__global__ void repartWithSharedMemoryAndHarcodedsSize(const unsigned int f_HistoTable[], unsigned int f_RepartionTable[]); 
+ 
 
 // À partir de la répartition précédente, “étaler” l’histogramme.
 __global__ void equalization(const unsigned int f_RepartionTable[], const unsigned int f_sizeTableRepartition, float f_ValueTable[], const unsigned int sizeValueTable);

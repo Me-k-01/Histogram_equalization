@@ -107,10 +107,28 @@ void gpuCallBenchmark(Image & f_Image, const int f_nbEchantillon, dim3 f_bloc, d
             rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
             histogramWithSharedMemory<<<f_bloc, f_grille, f_nbEchantillon*sizeof(unsigned int)>>>(valueTable, sizeImage, f_nbEchantillon, histoTable);
             break;
+        case kernelToTest::HISTOGRAM_WITHSHAREDMEMORYANDHARCODEDSIZE :
+            rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
+            histogramWithSharedMemoryAndHarcodedsSize<<<f_bloc, f_grille>>>(valueTable, sizeImage, histoTable);
+            break;
+        case kernelToTest::HISTOGRAM_WITHMINIMUMCALCULATIONDEPENCIES :
+            rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
+            histogramWithMinimumDependencies<<<f_bloc, f_grille, f_nbEchantillon*sizeof(unsigned int)>>>(valueTable, sizeImage, f_nbEchantillon, histoTable);
+            break;
         case kernelToTest::REPART :
             rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
             histogram<<<defaultBlocSize, defaultGridSize>>>(valueTable, sizeImage, f_nbEchantillon, histoTable);
             repart<<<f_bloc, f_grille>>>(histoTable, f_nbEchantillon, repartTable);
+            break;
+        case kernelToTest::REPART_WITHSHAREDMEMORY :
+            rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
+            histogram<<<defaultBlocSize, defaultGridSize>>>(valueTable, sizeImage, f_nbEchantillon, histoTable);
+            repartWithSharedMemory<<<f_bloc, f_grille, f_nbEchantillon * sizeof(unsigned int)>>>(histoTable, f_nbEchantillon, repartTable);
+            break;
+        case kernelToTest::REPART_WITHSHAREDMEMORYANDHARCODEDSIZE :
+            rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
+            histogram<<<defaultBlocSize, defaultGridSize>>>(valueTable, sizeImage, f_nbEchantillon, histoTable);
+            repartWithSharedMemoryAndHarcodedsSize<<<f_bloc, f_grille>>>(histoTable, repartTable);
             break;
         case kernelToTest::EQUALIZATION :
             rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
@@ -146,6 +164,7 @@ void gpuCallBenchmark(Image & f_Image, const int f_nbEchantillon, dim3 f_bloc, d
     HANDLE_ERROR(cudaFree(histoTable));
     HANDLE_ERROR(cudaFree(repartTable));
 }
+
 
 // Fonction qui pour chaque pixel de l’image, calcule sa valeur dans l’espace HSV, et répartit le résultat dans trois tableaux différents
 __global__ void rgb2hsv(const unsigned char f_PixelTable[], const unsigned int f_sizeTable, float f_HueTable[], float f_SaturationTable[], float f_ValueTable[]){
@@ -319,10 +338,77 @@ __global__ void histogramWithSharedMemory(const float f_ValueTable[], unsigned i
     
 }
 
+// amélioration avec des histogrammes partiels intermédiaire mais la taille est hardcodée
+__global__ void histogramWithSharedMemoryAndHarcodedsSize(const float f_ValueTable[], unsigned int f_sizeTable, unsigned int f_HistoTable[]) {
+    const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+    const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
+    const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
+    int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
+
+    //création de l'historgramme du block et initialisation à 0
+    __shared__ unsigned int histo[HISTO_SIZE];
+    
+    // vérification a faire si le tableau histo n'est pas initialisé à 0 par défaut 
+    /*for (int i = 0; i < f_nbEchantillon; i++)
+    {
+        histo[i] =0;
+    }
+    __syncthreads();*/
+
+    //calcule des histogramme partiels
+	for (; tidGlobal < f_sizeTable; tidGlobal += nbThreadTotal) { 
+        int indexHist = roundf(f_ValueTable[tidGlobal] * HISTO_SIZE);
+        atomicAdd(&histo[indexHist], 1);
+    }
+    __syncthreads();
+
+    //calcule de l'histogramme complet
+    int tidInBlock = threadIdx.x + threadIdx.y * blockDim.x;
+    int nbThreadInBlock = blockDim.x * blockDim.y;
+    for (; tidInBlock < HISTO_SIZE; tidInBlock += nbThreadInBlock)
+    {
+        atomicAdd(&f_HistoTable[tidInBlock], histo[tidInBlock]);
+    }
+    
+}
+
+// amélioration qui enlève au maximum les dépendances de calcules
+__global__ void histogramWithMinimumDependencies(const float f_ValueTable[], unsigned int f_sizeTable, const unsigned int f_nbEchantillon, unsigned int f_HistoTable[]) {
+    const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+    const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
+    const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
+    int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
+
+    //création de l'historgramme du block et initialisation à 0
+    extern __shared__ unsigned int histo[];
+    
+    // vérification a faire si le tableau histo n'est pas initialisé à 0 par défaut 
+    /*for (int i = 0; i < f_nbEchantillon; i++)
+    {
+        histo[i] =0;
+    }
+    __syncthreads();*/
+
+    //calcule des histogramme partiels
+	for (; tidGlobal < f_sizeTable; tidGlobal += nbThreadTotal) { 
+        //int indexHist = roundf(f_ValueTable[tidGlobal] * f_nbEchantillon);
+        atomicAdd(&histo[(int)roundf(f_ValueTable[tidGlobal] * f_nbEchantillon)], 1);
+    }
+    __syncthreads();
+
+    //calcule de l'histogramme complet
+    int tidInBlock = threadIdx.x + threadIdx.y * blockDim.x;
+    int nbThreadInBlock = blockDim.x * blockDim.y;
+    for (; tidInBlock < f_nbEchantillon; tidInBlock += nbThreadInBlock)
+    {
+        atomicAdd(&f_HistoTable[tidInBlock], histo[tidInBlock]);
+    }
+    
+}
+
 
 // À partir de l’histogramme, applique la fonction de répartition r(l)
 __global__ void repart(const unsigned int f_HistoTable[], const unsigned int f_sizeTable, unsigned int f_RepartionTable[]) {
-    //__shared__ repartitionTable [f_sizeTable]; 
     const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
     const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
     const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
@@ -336,9 +422,57 @@ __global__ void repart(const unsigned int f_HistoTable[], const unsigned int f_s
         //f_RepartionTable[x] = f_RepartionTable[x - 1] + f_HistoTable[x];
 
         // Soit on fait des calculs redondants de somme
-        int res = 0;
+        unsigned int res = 0;
         for (int k = 0; k <= tidGlobal; k++) {  
             res += f_HistoTable[k]; 
+        }
+        f_RepartionTable[tidGlobal] = res;
+    } 
+}
+
+// répartition avec l'utilisation de la shared memory pour le tableau histogramme
+__global__ void repartWithSharedMemory(const unsigned int f_HistoTable[], const unsigned int f_sizeTable, unsigned int f_RepartionTable[]) { 
+    const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+    const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
+    const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
+    int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
+
+    extern __shared__ unsigned int  sharedHisto [];
+
+    for (int i = threadIdx.x + blockDim.x * threadIdx.y; i < f_sizeTable; i+= blockDim.x * blockDim.y )
+    {
+        sharedHisto[i] = f_HistoTable[i];
+    }
+    __syncthreads();
+    
+	for (; tidGlobal < f_sizeTable; tidGlobal += nbThreadTotal) { 
+        unsigned int res = 0;
+        for (int k = 0; k <= tidGlobal; k++) {  
+            res += sharedHisto[k]; 
+        }
+        f_RepartionTable[tidGlobal] = res;
+    } 
+}
+
+// répartition avec l'utilisation de la shared memory pour le tableau histogramme mais la taille est hardcodée
+__global__ void repartWithSharedMemoryAndHarcodedsSize(const unsigned int f_HistoTable[], unsigned int f_RepartionTable[]) { 
+    const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+    const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
+    const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
+    int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
+
+    __shared__ unsigned int  sharedHisto [HISTO_SIZE];
+
+    for (int i = threadIdx.x + blockDim.x * threadIdx.y; i < HISTO_SIZE; i+= blockDim.x * blockDim.y )
+    {
+        sharedHisto[i] = f_HistoTable[i];
+    }
+    __syncthreads();
+    
+	for (; tidGlobal < HISTO_SIZE; tidGlobal += nbThreadTotal) { 
+        unsigned int res = 0;
+        for (int k = 0; k <= tidGlobal; k++) {  
+            res += sharedHisto[k]; 
         }
         f_RepartionTable[tidGlobal] = res;
     } 

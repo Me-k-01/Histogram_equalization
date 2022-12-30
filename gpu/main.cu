@@ -6,7 +6,7 @@
 #include "../image.hpp"
  
 std::string outPutImgDir = "./img_out/"; 
-const unsigned int maxKernelNumber = 8;
+const unsigned int maxKernelNumber = 12;
 
 void printUsage() 
 {
@@ -15,19 +15,23 @@ void printUsage()
 			<< "Required argument" << std::endl 
 			<< " \t -f, --file <F>: The image file name" << std::endl 
 			<< "Optional arguments:" << std::endl 
-			<< " \t -o, --output-file <F>: The destination of the generated image. By default, it is saved under ./img_out/output.png" << std::endl 	
+			<< " \t -o, --output-file <F>: The destination of the generated image. By default, it is saved under ./img_out/output.png" << std::endl 
 			<< " \t -d, --block-dimension <X Y>: dimension of each block" << std::endl 
 			<< " \t -D, --grid-dimension  <X Y>: dimension of the grid" << std::endl 
 			<< " \t -b, --benchmark  <N>: The kernel number to be tested for the benchmark, if this option is not used, the provided image is processed." << std::endl 
-			<< " \t\t\t   0 : rgb2hsv - kernel to convert rgb to hsv" << std::endl 
-			<< " \t\t\t   1 : rgb2hsv_MINIMUMDIVERGENCE - kernel to convert rgb to hsv with minimum divergence" << std::endl 
-			<< " \t\t\t   2 : rgb2hsv_COORDINATEDOUTPUTS - kernel to convert rgb to hsv with coordinated entries" << std::endl 
-			<< " \t\t\t   3 : histogram - kernel to generate an histogram of value"	<< std::endl 	
-			<< " \t\t\t   4 : histogram_WITHSHAREDMEMORY - kernel to generate an histogram of value with use of shared memory"	<< std::endl 	
-			<< " \t\t\t   5 : repart - kernel to repart the histogram" << std::endl 
-			<< " \t\t\t   6 : equalization - kernel to equalize the histogram" << std::endl 
-			<< " \t\t\t   7 : equalization_CONSTANTCOEFFICIENT - kernel to equalize the histogram with the use of constant coefficient" << std::endl 	
-			<< " \t\t\t   8 : hsv2rgb - kernel to convert back hsv to rgb" << std::endl 
+			<< " \t\t\t    0 : rgb2hsv - kernel to convert rgb to hsv" << std::endl 
+			<< " \t\t\t    1 : rgb2hsv_MINIMUMDIVERGENCE - kernel to convert rgb to hsv with minimum divergence" << std::endl 
+			<< " \t\t\t    2 : rgb2hsv_COORDINATEDOUTPUTS - kernel to convert rgb to hsv with coordinated entries" << std::endl 
+			<< " \t\t\t    3 : histogram - kernel to generate an histogram of value" << std::endl 
+			<< " \t\t\t    4 : histogram_WITHSHAREDMEMORY - kernel to generate an histogram of value with use of shared memory" << std::endl 
+			<< " \t\t\t    5 : histogram_WITHSHAREDMEMORYANDHARDCODEDSIZE - kernel to generate an histogram of value with use of shared memory with hardcoded size (" << HISTO_SIZE << ")" << std::endl 
+			<< " \t\t\t    6 : histogram_WITHMINIMUMCALCULATIONDEPENCIES - kernel to generate an histogram of value with use of shared memory and minimum calculation dependencies" << std::endl 	
+			<< " \t\t\t    7 : repart - kernel to repart the histogram" << std::endl 	
+			<< " \t\t\t    8 : repart_WITHSHAREDMEMORY - kernel to repart the histogram with use of shared memory" << std::endl 	
+			<< " \t\t\t    9 : repart_WITHSHAREDMEMORYANDHARCODEDSIZE - kernel to repart the histogram with use of shared memory with hardcoded size (" << HISTO_SIZE << ")"  << std::endl 
+			<< " \t\t\t   10 : equalization - kernel to equalize the histogram" << std::endl 
+			<< " \t\t\t   11 : equalization_CONSTANTCOEFFICIENT - kernel to equalize the histogram with the use of constant coefficient" << std::endl 
+			<< " \t\t\t   12 : hsv2rgb - kernel to convert back hsv to rgb" << std::endl 
 		    << std::endl; 
 	exit( EXIT_FAILURE );
 }
@@ -74,8 +78,8 @@ int main( int argc, char **argv )
 		} else if ( !strcmp( argv[i], "-b" ) || !strcmp( argv[i], "--benchmark")  ) {
 			if	(sscanf(argv[++i], "%i", &numKernelToUse) != 1)
 				printUsage();
-				//on s'assure aussi que le numéro sélectionné n'est pas supérieur au maximum utilisable
-			if (numKernelToUse > maxKernelNumber)
+				//on s'assure aussi que le numéro sélectionné n'est pas supérieur au maximum utilisable et est bien au moins égale à zéro
+			if (numKernelToUse < 0 || numKernelToUse > maxKernelNumber)
 				printUsage();
 		} else {
 			printUsage();
