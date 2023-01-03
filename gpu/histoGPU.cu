@@ -239,7 +239,7 @@ __global__ void rgb2hsvWithMinimumDivergence(const unsigned char f_PixelTable[],
                 (red - (green / 2.f + blue/2.f)) / sqrtf(red*red + green*green + blue*blue - (red*green + red*blue + green*blue))
             ) * 180.f / PI;
 
-            f_HueTable[tidGlobal] = (blue > green)*(360.f -hue) + (blue > green)*(hue);
+            f_HueTable[tidGlobal] = (blue > green)*(360.f -hue) + (blue > green)*hue;
         } else {
             f_HueTable[tidGlobal] = 0.f;
         }
