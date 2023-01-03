@@ -4,7 +4,7 @@
 #include <iomanip>
 
 #include "histoCPU.hpp" 
-#include "../../image.hpp"
+#include "../../utils/image.hpp"
  
 std::string outPutImgDir = ".\\img_out\\";
 

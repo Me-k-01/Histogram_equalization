@@ -3,7 +3,7 @@
 #include <cstring> 
 
 #include "histoGPU.hpp" 
-#include "../image.hpp"
+#include "../utils/image.hpp"
  
 std::string outPutImgDir = "./img_out/"; 
 const unsigned int maxKernelNumber = 12;

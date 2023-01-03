@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "../image.hpp"
+#include "../utils/image.hpp"
 
 #define HISTO_SIZE 256
 
