@@ -3,3 +3,4 @@ hist
 *.lib
 *.exe
 imgoutput/*
+test

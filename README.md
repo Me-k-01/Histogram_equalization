@@ -9,7 +9,7 @@ Pour compiler ce programme:
 ```sh
 nvcc -o hist ./gpu/main.cu ./gpu/histoGPU.cu ./utils/image.cpp
 ```
-Pour cancer la répartition de l'histogramme sur une image png:
+Pour lancer la répartition de l'histogramme sur une image png:
 ```sh
 ./hist -f ./img/chateau.png
 ```
