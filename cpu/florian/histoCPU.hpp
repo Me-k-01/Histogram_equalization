@@ -1,7 +1,7 @@
 #ifndef __HISTOGRAMME_CPU__
 #define __HISTOGRAMME_CPU__
   
-#include "../../image.hpp"
+#include "../../utils/image.hpp"
 
 // Version séquentiel de l'algorithme 
 

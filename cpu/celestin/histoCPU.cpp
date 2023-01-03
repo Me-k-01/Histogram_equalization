@@ -5,6 +5,7 @@
 #include <math.h>
 
 #define NOMINMAX //ligne rendu obligatoire si l'on veut utiliser les fonction min et max de la bibliothèque algorithm car "windows.h" définit deux macros : max et min
+
 #include "../../utils/chronoCPU.hpp"
 
 

@@ -3,7 +3,7 @@
 #include <cstring> 
 
 #include "histoGPU.hpp" 
-#include "../image.hpp"
+#include "../utils/image.hpp"
  
 std::string outPutImgDir = "./img_out/"; 
 const unsigned int maxKernelNumber = 12;
@@ -20,17 +20,17 @@ void printUsage()
 			<< " \t -D, --grid-dimension  <X Y>: dimension of the grid" << std::endl 
 			<< " \t -b, --benchmark  <N>: The kernel number to be tested for the benchmark, if this option is not used, the provided image is processed." << std::endl 
 			<< " \t\t\t    0 : rgb2hsv - kernel to convert rgb to hsv" << std::endl 
-			<< " \t\t\t    1 : rgb2hsv_MINIMUMDIVERGENCE - kernel to convert rgb to hsv with minimum divergence" << std::endl 
-			<< " \t\t\t    2 : rgb2hsv_COORDINATEDOUTPUTS - kernel to convert rgb to hsv with coordinated entries" << std::endl 
+			<< " \t\t\t    1 : rgb2hsv_MinimuDivergence - kernel to convert rgb to hsv with minimum divergence" << std::endl 
+			<< " \t\t\t    2 : rgb2hsv_CoordinatedOutputs - kernel to convert rgb to hsv with coordinated entries" << std::endl 
 			<< " \t\t\t    3 : histogram - kernel to generate an histogram of value" << std::endl 
-			<< " \t\t\t    4 : histogram_WITHSHAREDMEMORY - kernel to generate an histogram of value with use of shared memory" << std::endl 
-			<< " \t\t\t    5 : histogram_WITHSHAREDMEMORYANDHARDCODEDSIZE - kernel to generate an histogram of value with use of shared memory with hardcoded size (" << HISTO_SIZE << ")" << std::endl 
-			<< " \t\t\t    6 : histogram_WITHMINIMUMCALCULATIONDEPENCIES - kernel to generate an histogram of value with use of shared memory and minimum calculation dependencies" << std::endl 	
+			<< " \t\t\t    4 : histogram_WithSharedMemory - kernel to generate an histogram of value with use of shared memory" << std::endl 
+			<< " \t\t\t    5 : histogram_WithSharedMemoryAndHardcodedSize - kernel to generate an histogram of value with use of shared memory with hardcoded size (" << HISTO_SIZE << ")" << std::endl 
+			<< " \t\t\t    6 : histogram_WithMinilmumCalculationDepencies - kernel to generate an histogram of value with use of shared memory and minimum calculation dependencies" << std::endl 	
 			<< " \t\t\t    7 : repart - kernel to repart the histogram" << std::endl 	
-			<< " \t\t\t    8 : repart_WITHSHAREDMEMORY - kernel to repart the histogram with use of shared memory" << std::endl 	
-			<< " \t\t\t    9 : repart_WITHSHAREDMEMORYANDHARCODEDSIZE - kernel to repart the histogram with use of shared memory with hardcoded size (" << HISTO_SIZE << ")"  << std::endl 
+			<< " \t\t\t    8 : repart_WithSharedMemory - kernel to repart the histogram with use of shared memory" << std::endl 	
+			<< " \t\t\t    9 : repart_WithSharedMemoryAndHardcodedSize - kernel to repart the histogram with use of shared memory with hardcoded size (" << HISTO_SIZE << ")"  << std::endl 
 			<< " \t\t\t   10 : equalization - kernel to equalize the histogram" << std::endl 
-			<< " \t\t\t   11 : equalization_CONSTANTCOEFFICIENT - kernel to equalize the histogram with the use of constant coefficient" << std::endl 
+			<< " \t\t\t   11 : equalization_ConstantCoefficient - kernel to equalize the histogram with the use of constant coefficient" << std::endl 
 			<< " \t\t\t   12 : hsv2rgb - kernel to convert back hsv to rgb" << std::endl 
 		    << std::endl; 
 	exit( EXIT_FAILURE );

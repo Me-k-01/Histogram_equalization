@@ -1,7 +1,7 @@
 #include <iostream> 
 #include <cstring>
 #include "histoCPU.hpp" 
-#include "../../image.hpp" 
+#include "../../utils/image.hpp" 
  
  void printUsage() 
 {
