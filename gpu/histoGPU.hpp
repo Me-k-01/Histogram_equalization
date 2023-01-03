@@ -20,7 +20,8 @@ enum kernelToTest {
     REPART_WITHSHAREDMEMORYANDHARCODEDSIZE,
     EQUALIZATION,
     EQUALIZATION_CONSTANTCOEFFICIENT,
-    HSV2RGB
+    HSV2RGB,
+    HSV2RGB_MINIMUMDIVERGENCE
 };
 
 // variables et constantes utilisable dans les fonctions __global__ et __device__
@@ -66,6 +67,8 @@ __global__ void equalizationWithConstantCoefficient(const unsigned int f_Reparti
 
 // Transformation de HSV vers RGB (donc de trois tableaux vers un seul).
 __global__ void hsv2rgb(const float f_HueTable[], const float f_SaturationTable[],const float f_ValueTable[], const unsigned int f_sizeTable, unsigned char f_PixelTable[]);
+// amélioration qui evite les branches en utilisant le résultat des test logique directement dans la formule (sous forme d'entier)
+__global__ void hsv2rgbWithMinimumDivergence(const float f_HueTable[], const float f_SaturationTable[], const float f_ValueTable[], const unsigned int f_sizeTable, unsigned char f_PixelTable[]);
 
 
 #endif // __HISTOGRAMME_GPU__
