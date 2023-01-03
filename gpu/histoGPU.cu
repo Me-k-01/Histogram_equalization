@@ -154,6 +154,13 @@ void gpuCallBenchmark(Image & f_Image, const int f_nbEchantillon, dim3 f_bloc, d
             equalization<<<defaultBlocSize, defaultGridSize>>>(repartTable, f_nbEchantillon, valueTable, sizeImage);
             hsv2rgb<<<f_bloc,f_grille>>>(hueTable,saturationTable,valueTable, sizeImage, pixelTableOut);
             break;
+        case kernelToTest::HSV2RGB_MINIMUMDIVERGENCE : 
+            rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
+            histogram<<<defaultBlocSize, defaultGridSize>>>(valueTable, sizeImage, f_nbEchantillon, histoTable);
+            repart<<<defaultBlocSize, defaultGridSize>>>(histoTable, f_nbEchantillon, repartTable);
+            equalization<<<defaultBlocSize, defaultGridSize>>>(repartTable, f_nbEchantillon, valueTable, sizeImage);
+            hsv2rgbWithMinimumDivergence<<<f_bloc,f_grille>>>(hueTable,saturationTable,valueTable, sizeImage, pixelTableOut);
+            break;
     }
 
     HANDLE_ERROR(cudaFree(pixelTableIn));
@@ -551,6 +558,45 @@ __global__ void hsv2rgb(const float f_HueTable[], const float f_SaturationTable[
             f_PixelTable[pixelIndex + 1] = colorMin;
             f_PixelTable[pixelIndex + 2] = colorInter;
         }
+        
+        tidGlobal += nbThreadTotal;
+    }
+
+}
+
+// amélioration qui evite les branches en utilisant le résultat des test logique directement dans la formule (sous forme d'entier)
+__global__ void hsv2rgbWithMinimumDivergence(const float f_HueTable[], const float f_SaturationTable[], const float f_ValueTable[], const unsigned int f_sizeTable, unsigned char f_PixelTable[]) {
+
+    const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+    const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
+    const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
+    int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
+
+    while (tidGlobal < f_sizeTable) {
+        const float cMax = 255.f * f_ValueTable[tidGlobal];
+        const float cMin = cMax  * (1.f - f_SaturationTable[tidGlobal]);
+        const float hue  = f_HueTable[tidGlobal];
+        const float cAdd = (cMax - cMin) * (1.f - fabsf(fmodf(hue / 60.f, 2.f) - 1.f));
+        const unsigned char colorMax   = roundf(cMax);
+        const unsigned char colorMin   = roundf(cMin);
+        const unsigned char colorInter = roundf(cAdd + cMin);
+
+        const int pixelIndex = tidGlobal * 3;
+        f_PixelTable[pixelIndex]     =  (hue < 60) * colorMax + 
+                                        (hue >= 60 && hue < 120) * colorInter + 
+                                        (hue >= 120 && hue < 240) * colorMin +
+                                        (hue >= 240 && hue < 300) * colorInter +
+                                        (hue >= 300) * colorMax;
+
+        f_PixelTable[pixelIndex + 1] =  (hue < 60) * colorInter + 
+                                        (hue >= 60 && hue < 180) * colorMax + 
+                                        (hue >= 180 && hue < 240) * colorInter +
+                                        (hue >= 240) * colorMin;
+
+        f_PixelTable[pixelIndex + 2] =  (hue < 120) * colorMin + 
+                                        (hue >= 120 && hue < 180) * colorInter + 
+                                        (hue >= 180 && hue < 300) * colorMax +
+                                        (hue >= 300) * colorInter;
         
         tidGlobal += nbThreadTotal;
     }

@@ -6,7 +6,7 @@
 #include "../utils/image.hpp"
  
 std::string outPutImgDir = "./img_out/"; 
-const unsigned int maxKernelNumber = 12;
+const unsigned int maxKernelNumber = 13;
 
 void printUsage() 
 {
@@ -32,6 +32,7 @@ void printUsage()
 			<< " \t\t\t   10 : equalization - kernel to equalize the histogram" << std::endl 
 			<< " \t\t\t   11 : equalization_ConstantCoefficient - kernel to equalize the histogram with the use of constant coefficient" << std::endl 
 			<< " \t\t\t   12 : hsv2rgb - kernel to convert back hsv to rgb" << std::endl 
+			<< " \t\t\t   13 : hsv2rgb_MinimuDivergence - kernel to convert back hsv to rgb with minimum divergence" << std::endl 
 		    << std::endl; 
 	exit( EXIT_FAILURE );
 }
