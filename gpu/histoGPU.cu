@@ -128,7 +128,7 @@ void gpuCallBenchmark(Image & f_Image, const int f_nbEchantillon, dim3 f_bloc, d
         case kernelToTest::REPART_WITHSHAREDMEMORYANDHARCODEDSIZE :
             rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
             histogram<<<defaultBlocSize, defaultGridSize>>>(valueTable, sizeImage, f_nbEchantillon, histoTable);
-            repartWithSharedMemoryAndHarcodedsSize<<<f_bloc, f_grille>>>(histoTable, repartTable);
+            repartWithSharedMemoryAndHarcodedSize<<<f_bloc, f_grille>>>(histoTable, repartTable);
             break;
         case kernelToTest::EQUALIZATION :
             rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
@@ -462,7 +462,7 @@ __global__ void repartWithSharedMemory(const unsigned int f_HistoTable[], const 
 }
 
 // répartition avec l'utilisation de la shared memory pour le tableau histogramme mais la taille est hardcodée
-__global__ void repartWithSharedMemoryAndHarcodedsSize(const unsigned int f_HistoTable[], unsigned int f_RepartionTable[]) { 
+__global__ void repartWithSharedMemoryAndHarcodedSize(const unsigned int f_HistoTable[], unsigned int f_RepartionTable[]) { 
     const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
     const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
     const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;

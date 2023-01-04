@@ -56,7 +56,7 @@ __global__ void repart(const unsigned int f_HistoTable[], const unsigned int f_s
 // répartition avec l'utilisation de la shared memory pour le tableau histogramme
 __global__ void repartWithSharedMemory(const unsigned int f_HistoTable[], const unsigned int f_sizeTable, unsigned int f_RepartionTable[]);
 // répartition avec l'utilisation de la shared memory pour le tableau histogramme mais la taille est hardcodée
-__global__ void repartWithSharedMemoryAndHarcodedsSize(const unsigned int f_HistoTable[], unsigned int f_RepartionTable[]); 
+__global__ void repartWithSharedMemoryAndHarcodedSize(const unsigned int f_HistoTable[], unsigned int f_RepartionTable[]); 
  
 
 // À partir de la répartition précédente, “étaler” l’histogramme.
