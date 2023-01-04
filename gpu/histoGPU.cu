@@ -285,7 +285,7 @@ __global__ void rgb2hsvWithCoordinatedOutputs(const unsigned char f_PixelTable[]
         } else {
             hueNumber = 0.f;
         }
-
+        __syncthreads();
         f_ValueTable[tidGlobal] = valueNumber;
         f_SaturationTable[tidGlobal] = saturationNumber;
         f_HueTable[tidGlobal] = hueNumber;
