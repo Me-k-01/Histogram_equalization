@@ -109,7 +109,7 @@ void gpuCallBenchmark(Image & f_Image, const int f_nbEchantillon, dim3 f_bloc, d
             break;
         case kernelToTest::HISTOGRAM_WITHSHAREDMEMORYANDHARCODEDSIZE :
             rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
-            histogramWithSharedMemoryAndHarcodedsSize<<<f_bloc, f_grille>>>(valueTable, sizeImage, histoTable);
+            histogramWithSharedMemoryAndHarcodedSize<<<f_bloc, f_grille>>>(valueTable, sizeImage, histoTable);
             break;
         case kernelToTest::HISTOGRAM_WITHMINIMUMCALCULATIONDEPENCIES :
             rgb2hsv<<<defaultBlocSize, defaultGridSize>>>(pixelTableIn, sizeImage, hueTable, saturationTable, valueTable);
@@ -277,7 +277,7 @@ __global__ void rgb2hsvWithCoordinatedOutputs(const unsigned char f_PixelTable[]
         
         float hueNumber;
         if (colorMax - colorMin > 0) {
-            float hue = acosf( 
+            const float hue = acosf( 
                 (red - (green / 2.f + blue/2.f)) / sqrtf(red*red + green*green + blue*blue - (red*green + red*blue + green*blue))
             ) * 180.f / PI;
 
@@ -304,7 +304,7 @@ __global__ void histogram(const float f_ValueTable[], unsigned int f_sizeTable, 
     int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
 
 	for (; tidGlobal < f_sizeTable; tidGlobal += nbThreadTotal) { 
-        int indexHist = roundf(f_ValueTable[tidGlobal] * f_nbEchantillon);
+        const int indexHist = roundf(f_ValueTable[tidGlobal] * f_nbEchantillon);
         // On doit attendre que les threads aient terminé d'écrire sur la valeur pour incrémenter.
         atomicAdd(&f_HistoTable[indexHist], 1.f);
     }
@@ -322,22 +322,22 @@ __global__ void histogramWithSharedMemory(const float f_ValueTable[], unsigned i
     extern __shared__ unsigned int histo[];
     
     // vérification a faire si le tableau histo n'est pas initialisé à 0 par défaut 
-    /*for (int i = 0; i < f_nbEchantillon; i++)
+    for (int i = threadIdx.x + threadIdx.y * blockDim.x; i < f_nbEchantillon; i+=blockDim.x * blockDim.y)
     {
         histo[i] =0;
     }
-    __syncthreads();*/
+    __syncthreads();
 
     //calcule des histogramme partiels
 	for (; tidGlobal < f_sizeTable; tidGlobal += nbThreadTotal) { 
-        int indexHist = roundf(f_ValueTable[tidGlobal] * f_nbEchantillon);
+        const int indexHist = roundf(f_ValueTable[tidGlobal] * f_nbEchantillon);
         atomicAdd(&histo[indexHist], 1);
     }
     __syncthreads();
 
     //calcule de l'histogramme complet
     int tidInBlock = threadIdx.x + threadIdx.y * blockDim.x;
-    int nbThreadInBlock = blockDim.x * blockDim.y;
+    const int nbThreadInBlock = blockDim.x * blockDim.y;
     for (; tidInBlock < f_nbEchantillon; tidInBlock += nbThreadInBlock)
     {
         atomicAdd(&f_HistoTable[tidInBlock], histo[tidInBlock]);
@@ -346,7 +346,7 @@ __global__ void histogramWithSharedMemory(const float f_ValueTable[], unsigned i
 }
 
 // amélioration avec des histogrammes partiels intermédiaire mais la taille est hardcodée
-__global__ void histogramWithSharedMemoryAndHarcodedsSize(const float f_ValueTable[], unsigned int f_sizeTable, unsigned int f_HistoTable[]) {
+__global__ void histogramWithSharedMemoryAndHarcodedSize(const float f_ValueTable[], unsigned int f_sizeTable, unsigned int f_HistoTable[]) {
     const int tidx = threadIdx.x + blockIdx.x * blockDim.x;
     const int tidy = threadIdx.y + blockIdx.y * blockDim.y; 
     const int nbThreadTotal = blockDim.x * gridDim.x * blockDim.y * gridDim.y;
@@ -356,11 +356,11 @@ __global__ void histogramWithSharedMemoryAndHarcodedsSize(const float f_ValueTab
     __shared__ unsigned int histo[HISTO_SIZE];
     
     // vérification a faire si le tableau histo n'est pas initialisé à 0 par défaut 
-    /*for (int i = 0; i < f_nbEchantillon; i++)
+    for (int i = threadIdx.x + threadIdx.y * blockDim.x; i < HISTO_SIZE; i+=blockDim.x * blockDim.y)
     {
         histo[i] =0;
     }
-    __syncthreads();*/
+    __syncthreads();
 
     //calcule des histogramme partiels
 	for (; tidGlobal < f_sizeTable; tidGlobal += nbThreadTotal) { 
@@ -371,7 +371,7 @@ __global__ void histogramWithSharedMemoryAndHarcodedsSize(const float f_ValueTab
 
     //calcule de l'histogramme complet
     int tidInBlock = threadIdx.x + threadIdx.y * blockDim.x;
-    int nbThreadInBlock = blockDim.x * blockDim.y;
+    const int nbThreadInBlock = blockDim.x * blockDim.y;
     for (; tidInBlock < HISTO_SIZE; tidInBlock += nbThreadInBlock)
     {
         atomicAdd(&f_HistoTable[tidInBlock], histo[tidInBlock]);
@@ -390,11 +390,11 @@ __global__ void histogramWithMinimumDependencies(const float f_ValueTable[], uns
     extern __shared__ unsigned int histo[];
     
     // vérification a faire si le tableau histo n'est pas initialisé à 0 par défaut 
-    /*for (int i = 0; i < f_nbEchantillon; i++)
+    for (int i = threadIdx.x + threadIdx.y * blockDim.x; i < f_nbEchantillon; i+=blockDim.x * blockDim.y)
     {
         histo[i] =0;
     }
-    __syncthreads();*/
+    __syncthreads();
 
     //calcule des histogramme partiels
 	for (; tidGlobal < f_sizeTable; tidGlobal += nbThreadTotal) { 
@@ -405,7 +405,7 @@ __global__ void histogramWithMinimumDependencies(const float f_ValueTable[], uns
 
     //calcule de l'histogramme complet
     int tidInBlock = threadIdx.x + threadIdx.y * blockDim.x;
-    int nbThreadInBlock = blockDim.x * blockDim.y;
+    const int nbThreadInBlock = blockDim.x * blockDim.y;
     for (; tidInBlock < f_nbEchantillon; tidInBlock += nbThreadInBlock)
     {
         atomicAdd(&f_HistoTable[tidInBlock], histo[tidInBlock]);

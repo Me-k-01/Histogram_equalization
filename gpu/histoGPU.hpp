@@ -47,7 +47,7 @@ __global__ void histogram(const float f_ValueTable[], unsigned int f_sizeTable, 
 // amélioration avec des histogrammes partiels intermédiaire
 __global__ void histogramWithSharedMemory(const float f_ValueTable[], unsigned int f_sizeTable, const unsigned int f_nbEchantillon, unsigned int f_HistoTable[]);
 // amélioration avec des histogrammes partiels intermédiaire mais la taille est hardcodée
-__global__ void histogramWithSharedMemoryAndHarcodedsSize(const float f_ValueTable[], unsigned int f_sizeTable, unsigned int f_HistoTable[]);
+__global__ void histogramWithSharedMemoryAndHarcodedSize(const float f_ValueTable[], unsigned int f_sizeTable, unsigned int f_HistoTable[]);
 // amélioration qui enlève au maximum les dépendances de calcules
 __global__ void histogramWithMinimumDependencies(const float f_ValueTable[], unsigned int f_sizeTable, const unsigned int f_nbEchantillon, unsigned int f_HistoTable[]);
 
