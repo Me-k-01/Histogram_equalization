@@ -304,7 +304,7 @@ __global__ void histogram(const float f_ValueTable[], unsigned int f_sizeTable, 
     int tidGlobal = tidx + tidy * blockDim.x * gridDim.x;
 
 	for (; tidGlobal < f_sizeTable; tidGlobal += nbThreadTotal) { 
-        const int indexHist = roundf(f_ValueTable[tidGlobal] * f_nbEchantillon);
+        const int indexHist = roundf(f_ValueTable[tidGlobal] * (f_nbEchantillon-1));
         // On doit attendre que les threads aient terminé d'écrire sur la valeur pour incrémenter.
         atomicAdd(&f_HistoTable[indexHist], 1.f);
     }
@@ -330,7 +330,7 @@ __global__ void histogramWithSharedMemory(const float f_ValueTable[], unsigned i
 
     //calcule des histogramme partiels
 	for (; tidGlobal < f_sizeTable; tidGlobal += nbThreadTotal) { 
-        const int indexHist = roundf(f_ValueTable[tidGlobal] * f_nbEchantillon);
+        const int indexHist = roundf(f_ValueTable[tidGlobal] * (f_nbEchantillon-1));
         atomicAdd(&histo[indexHist], 1);
     }
     __syncthreads();
@@ -364,7 +364,7 @@ __global__ void histogramWithSharedMemoryAndHarcodedSize(const float f_ValueTabl
 
     //calcule des histogramme partiels
 	for (; tidGlobal < f_sizeTable; tidGlobal += nbThreadTotal) { 
-        int indexHist = roundf(f_ValueTable[tidGlobal] * HISTO_SIZE);
+        int indexHist = roundf(f_ValueTable[tidGlobal] * (HISTO_SIZE-1));
         atomicAdd(&histo[indexHist], 1);
     }
     __syncthreads();
@@ -399,7 +399,7 @@ __global__ void histogramWithMinimumDependencies(const float f_ValueTable[], uns
     //calcule des histogramme partiels
 	for (; tidGlobal < f_sizeTable; tidGlobal += nbThreadTotal) { 
         //int indexHist = roundf(f_ValueTable[tidGlobal] * f_nbEchantillon);
-        atomicAdd(&histo[(int)roundf(f_ValueTable[tidGlobal] * f_nbEchantillon)], 1);
+        atomicAdd(&histo[(int)roundf(f_ValueTable[tidGlobal] * (f_nbEchantillon-1))], 1);
     }
     __syncthreads();
 
