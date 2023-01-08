@@ -428,7 +428,7 @@ __global__ void repart(const unsigned int f_HistoTable[], const unsigned int f_s
         //__syncthreads() ou atomicAdd(f_RepartionTable[x - 1])
         //f_RepartionTable[x] = f_RepartionTable[x - 1] + f_HistoTable[x];
 
-        // Soit on fait des calculs redondants de somme
+        // Soit on fait des calculs redondants de somme (plus rapide)
         unsigned int res = 0;
         for (int k = 0; k <= tidGlobal; k++) {  
             res += f_HistoTable[k]; 
