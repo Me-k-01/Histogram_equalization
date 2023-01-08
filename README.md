@@ -13,3 +13,5 @@ Pour lancer la répartition de l'histogramme sur une image png:
 ```sh
 ./hist -f ./img/chateau.png
 ```
+
+Le benchmarking du programme est disponnible dans le fichier benchmark.ipynb
